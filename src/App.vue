@@ -1,30 +1,34 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+  <div id="music">
+    <a-layout>
+      <Suspense>
+        <a-layout-header><myHeader></myHeader></a-layout-header>
+      </Suspense>
+      <a-layout>
+        <a-layout-sider width="200">
+          <mySlider></mySlider>
+        </a-layout-sider>
+        <a-layout-content>
+          <router-view></router-view>
+        </a-layout-content>
+      </a-layout>
+      <a-layout-footer>
+        <myFooter id="myFooter"></myFooter>
+      </a-layout-footer>
+    </a-layout>
+  </div>
 </template>
+<script>
+import mySlider from '@/components/Slider.vue'
+import myHeader from '@/components/Header.vue'
+import myFooter from '@/components/Footer.vue'
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+export default {
+  components:{mySlider,myHeader},
+  setup(){
+    
+  }
 }
-
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
-}
+</script>
+<style lang="less">
 </style>

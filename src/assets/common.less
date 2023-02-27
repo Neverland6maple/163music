@@ -1,0 +1,124 @@
+@import '@/assets/theme.less';
+
+#app{
+  height: 100%;
+  min-width: 1028px;
+  min-height: 500px;
+  color: @black-font-color;
+  #music{
+    text-align: center;
+    height: 100%;
+    .ant-layout-header,
+    .ant-layout-footer {
+      color: #fff;
+      background: @black-header-footer;
+      padding: 0;
+    }
+    .ant-layout-footer {
+      z-index: 999;
+      height: 72px;
+      line-height: 72px;
+    }
+    .ant-layout-header {
+      height: 58px;
+      line-height: 58px;
+      min-width: 1028px;
+    }
+    .ant-layout{
+      height: 100%;
+    }
+    .ant-layout-has-sider{
+      border-bottom: solid 1px #454545;
+      border-top: solid 1px #a71e1e;
+    }
+    .ant-layout-sider {
+      color: #fff;
+      background: @black-body;
+      border-right: solid 1px #454545;
+      position: relative;
+    }
+    .ant-layout-content {
+      min-height: 120px;
+      color: #fff;
+      background: @black-body;
+      overflow: scroll;
+    }
+  }
+}
+  
+
+// slider
+#myMenu{
+  position: absolute;
+  top: 6px;
+  width: 100% !important;
+  height: 100%;
+  background-color: @black-body;
+  border-right: solid 1px transparent;
+  overflow: auto;
+  color: @black-font-color;
+  font-size: 15px;
+  .ant-menu-sub{
+    background-color: inherit;
+    color: inherit;
+  }
+  .ant-menu-submenu{
+    background-color: inherit;
+    color: inherit;
+    .ant-menu-submenu-title{
+      &:hover{
+        background-color: inherit;
+      }
+      color: @black-submenu-title;
+      font-size: 13px;
+    }
+    .ant-menu-submenu-arrow{
+      color: inherit;
+    }
+  }
+  .ant-menu-submenu-active{
+    color: inherit !important;
+  }
+  .ant-menu-item-group{
+    background-color: inherit; 
+  }
+  .ant-menu-item-group-title{
+    color: @black-submenu-title !important;
+    padding-left: 8px !important;
+    margin-left: 16px;
+    font-size: 13px;
+  }
+  .ant-menu-item{
+    &.ant-menu-item-selected{
+      background-color: @black-hover-color;
+      color: inherit;
+    }
+    &:hover{
+      color: inherit !important;
+      background-color: @black-hover-color;
+    }
+    width: 90%;
+    background-color: inherit;
+    margin: 0 0 0 16px;
+    padding-left: 8px !important;
+    padding-right: 0 !important;
+    border-radius: 5px;
+    &::after{
+      opacity: 0;
+    }
+  }
+  >.ant-menu-item-selected{
+    span{
+      font-weight: 700;
+      font-size: 17px;
+    }
+  }
+  a{
+    color: inherit;
+  }
+  
+}
+
+//footer
+#myFooter{
+}
