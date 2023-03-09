@@ -1,0 +1,14 @@
+@keyframes playerPage{
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes revolve{
+  from {}
+  to {
+    transform: rotate(359deg);
+  }
+}

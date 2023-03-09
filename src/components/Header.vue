@@ -1,8 +1,11 @@
 <template>
-    <div id="myHeader">
+    <div id="myHeader" :class="{'header-spreading' : myIsSpreading}">
         <div id="hdLeft">
-            <div id="logo">
+            <div id="logo" v-if="!myIsSpreading">
                 <router-link to="/" id="logoImg"></router-link>
+            </div>
+            <div class="fold" v-else @click="handleSpread">
+                    <DownOutlined />
             </div>
             <div id="subnav">
                 <div id="goNav">
@@ -10,7 +13,7 @@
                     <span id="goNext"></span>
                 </div>
                 <div id="search">
-                    <a-input id="ipt" placeholder="Basic usage" v-model:value="userName"> 
+                    <a-input id="ipt" placeholder="Basic usage" v-model:value="keyword" @pressEnter="handleSearch"> 
                         <template #prefix>
                             <user-outlined type="user" />
                         </template>
@@ -28,8 +31,12 @@
         </div>
         <div id="hdRight">
             <ul id="fn">
-                <li>
+                <li v-if="!myIsSpreading">
                     <SkinOutlined />
+                </li>
+                <li v-if="myIsSpreading" class="expand">
+                    <ExpandAltOutlined />
+                    <span :style="{fontSize:'12px',marginLeft:'4px'}">全屏纯享</span>
                 </li>
                 <li>
                     <SettingOutlined />
@@ -51,7 +58,7 @@
                     <CloseOutlined />
                 </li>
             </ul>
-            <div id="user">
+            <div id="user" v-if="!myIsSpreading">
                 <div id="userImg"><img src="@/assets/user.jpg" alt=""></div>
                 <a-dropdown :trigger="['click']">
                     <a class="ant-dropdown-link" @click.prevent>
@@ -80,8 +87,11 @@
 </template>
 
 <script>
-import {CustomerServiceOutlined,DownOutlined,SkinOutlined,SettingOutlined,MailOutlined,ExpandOutlined,MinusOutlined,BorderOutlined,CloseOutlined,} from '@ant-design/icons-vue'
-import { defineComponent,getCurrentInstance} from 'vue';
+import {CustomerServiceOutlined,DownOutlined,SkinOutlined,SettingOutlined,MailOutlined,ExpandOutlined,MinusOutlined,BorderOutlined,CloseOutlined,ExpandAltOutlined} from '@ant-design/icons-vue'
+import { computed } from '@vue/reactivity';
+import { defineComponent, ref,watch} from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 export default defineComponent({
     components:{
         CustomerServiceOutlined,
@@ -93,33 +103,77 @@ export default defineComponent({
         MinusOutlined,
         BorderOutlined,
         CloseOutlined,
+        ExpandAltOutlined,
     },
-    async setup(){
-        getCurrentInstance();
-        // const { proxy:{$axios} } = getCurrentInstance();
-        // const res = await $axios({
-        //     method:'get',
-        //     url:'/api'
-        // })
-        // console.log(res);
+    setup(){
+        const keyword = ref('');
+        const router = useRouter();
+        const store = useStore();
+        const isSpreading = computed(()=>store.state.isSpreading);
+        const myIsSpreading = ref(false);
+        watch(isSpreading,(newValue)=>{
+            if(newValue){
+                setTimeout(()=>{
+                    myIsSpreading.value = newValue;
+                },300)
+            }else{
+                myIsSpreading.value = newValue;
+            }
+            
+        },{immediate:true})
+        const handleSearch = ()=>{
+            router.push({
+                path:'/search',
+                query:{
+                    keyword:keyword.value
+                }
+            })
+        }
+        const handleSpread = ()=>{
+            store.commit('changeIsSpreading',false);
+        }
+        
+        return {
+            handleSearch,
+            keyword,
+            myIsSpreading,
+            handleSpread,
+        }
+     
     }
 })
 </script>
 
 <style lang="less" scoped>
+@import '@/assets/theme.less';
 #myHeader{
+    &.header-spreading{
+        background-color: #2b2b2b;
+        border-bottom: 0;
+        transition: all 0.05s ease-out;
+    }
     height: 100%;
     min-width: 1028px;
     position: relative;
+    border-bottom: solid 1px #a71e1e;
     #hdLeft{
         float: left;
         height: 100%;
-        #logo{
+        position: relative;
+        .fold{
             float: left;
             height: 100%;
+            margin-left: 28px;
+            color: @black-font-color;
+            cursor: pointer;
+        }
+        #logo{
+            float: left;
+            cursor: pointer;
+            height: 100%;
+            margin-top: 1px;
             #logoImg{
                 float: left;
-                margin-top: 1px;
                 height: 90%;
                 width: 180px;
                 background-image: url('@/assets/topbar.png');
@@ -128,11 +182,14 @@ export default defineComponent({
             }
         }
         #subnav{
-            float: left;
-            margin-left: 58px;
+            position: absolute;
+            left: 230px;
             height: 100%;
+            display: flex;
             #goNav{
-                float: left;
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 span{
                     &.available{
                         cursor: pointer;
@@ -154,11 +211,7 @@ export default defineComponent({
                     border-left: none;
                 }
             }
-            #search{
-                float: left;
-            }
             #singToSearch{
-                float: left;
                 color: #adafb2;
                 margin-left: 14px;
                 cursor: pointer;
@@ -224,6 +277,13 @@ export default defineComponent({
                 width: 36px;
                 color: #adafb2;
                 cursor: pointer;
+                &.expand{
+                    display: flex;
+                    width: 80px;
+                    justify-content: center;
+                    align-items: center;
+                    line-height: 12px;
+                }
             }
             #userMessage{
                 position: relative;

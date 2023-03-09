@@ -56,6 +56,7 @@ export default defineComponent({
         const changeNav = (activeKey)=>{
             console.log(activeKey);
         }
+        
         return {
             sgInfo,
             searchNav,

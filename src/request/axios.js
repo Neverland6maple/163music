@@ -91,10 +91,11 @@ const $post = (url, params) => {
 		});
 }
 	 //下面是vue3必须加的，vue2不需要，只需要暴露出去get，post方法就可以
-export default {
+export const request =  {
 	install: (app) => {
 		app.config.globalProperties['$get'] = $get;
 		app.config.globalProperties['$post'] = $post;
 		app.config.globalProperties['$axios'] = axios;
 	}
 }
+export const $axios = axios;

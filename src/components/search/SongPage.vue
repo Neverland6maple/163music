@@ -1,5 +1,7 @@
 <template>
     <div id="SongPage">
+      <a-spin :indicator="indicator" tip="加载中" :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
+      <template v-if="!spinning">
         <div class="playFn">
             <PlayAll></PlayAll>
             <DownloadAll></DownloadAll>
@@ -12,16 +14,28 @@
             :pagination="pagination"
             :rowClassName="(record, index) => (index % 2 === 0 ? 'table-striped' : null)"
             @change="handleTableChange"
+            :customRow=customRow
             />
+      </template>
     </div>
 </template>
 <script setup>
 import PlayAll from '@/components/unit/PlayAll.vue'
 import DownloadAll from '@/components/unit/DownloadAll.vue'
-import {HeartOutlined,DownloadOutlined,} from '@ant-design/icons-vue'
+import {HeartOutlined,DownloadOutlined,LoadingOutlined } from '@ant-design/icons-vue'
 import Pop from '@/components/search/Pop.vue'
-import { getCurrentInstance,computed, watch, reactive,ref } from 'vue';
+import { getCurrentInstance, watch, reactive,ref,h,computed } from 'vue';
 import timeFormat from '@/utils/timeFormat';
+import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
+const indicator = h(LoadingOutlined, {
+  style: {
+    fontSize: '20px',
+    marginRight:'16px',
+  },
+  spin: true,
+});
+const spinning = ref(true);
 const {proxy:{$axios}} = getCurrentInstance();
 const columns = [
   {
@@ -62,46 +76,72 @@ const columns = [
     width:''
   },
 ];
+const customRow = (record) => {
+  return {
+    onDblclick: (event) => {
+      handlePlaySong(record.key,record.index);
+    },
+  };
+}
 const dataSource = ref([]);
+const route = useRoute();
 let current = ref(1);
 const offset = ref(0);
-const getList = async ()=>{
+const store = useStore();
+const songList = [];
+const getList = async (keyword)=>{
+  spinning.value = true;
   const {data:res} = await $axios({
     method:'get',
-    url:`/api/cloudsearch?keywords=kanyewest&limit=100&offset=${offset.value}`
+    url:`/api/cloudsearch?keywords=${keyword}&limit=100&offset=${offset.value}`
   })
+  spinning.value = false;
   offset.value++;
   dataSource.value = [];
   const songs = res.result.songs;
   songs.forEach((item,index)=>{
     dataSource.value.push({
       key: item.id,
+      index,
       number:(current.value-1)*100+index+1,
       like:<HeartOutlined/>,
       download:<DownloadOutlined/>,
       song: item.name,
-      singer: item.ar[0].name,
+      singer: <route-link data-name={item.ar[0].name}>{item.ar[0].name}</route-link>,
       album: item.al.name,
       dt:timeFormat(item.dt),
       pop:<Pop>{item.pop}</Pop>,
       })
+      songList.push({
+        id:item.id,
+        name:item.name,
+        singer:item.ar[0].name,
+        dt:timeFormat(item.dt),
+      })
   })
 }
-getList();
 const  handleTableChange = async (pagination,filters, sorter, { currentDataSource })=>{
-    console.log(pagination);
     current.value = pagination.current;
-    getList();
-    
+    getList(route.query.keyword);
 }
-
+const handlePlaySong = (id,index)=>{
+  store.commit('setSongList',songList);
+  store.commit('changePlayingIndex',index);
+  store.dispatch('changeSong',id);
+}
 const pagination = reactive({
     pageSize:100,
     total:300,
     showSizeChanger:false,
     current,
 })
-
+watch(()=>route.query.keyword,(newValue)=>{
+  if(newValue){
+    getList(newValue);
+  }
+},{
+  immediate:true
+})
 
 
 </script>

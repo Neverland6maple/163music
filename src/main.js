@@ -3,11 +3,13 @@ import App from './App.vue'
 import Antd from 'ant-design-vue'
 import router from './router'
 import store from './store'
-import Axios from './request/axios'
+import { request} from './request/axios'
 
 import 'ant-design-vue/dist/antd.css';
 import '@/assets/reset.css'
 import '@/assets/common.less'
 import 'ant-design-vue/dist/antd.css';
+import '@/assets/animation.css';
+import '@/assets/theme.less';
 
-createApp(App).use(store).use(router).use(Antd).use(Axios).mount('#app')
+createApp(App).use(store).use(router).use(Antd).use(request).mount('#app')
