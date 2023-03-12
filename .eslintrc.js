@@ -17,5 +17,8 @@ module.exports = {
     "no-mixed-spaces-and-tabs":0,
     'no-undef': 0,
     'no-unused-vars':0,
+    'vue/no-unused-components':0,
+    'no-extra-semi':0,
+    'no-useless-escape':0,
   }
 }

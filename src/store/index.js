@@ -1,5 +1,9 @@
 import { createStore } from 'vuex';
 import {$axios} from '@/request/axios';
+import { Math } from 'core-js';
+
+
+
 export default createStore({
   state: {
     songURL:'',
@@ -22,7 +26,7 @@ export default createStore({
       dt:'00:00',
     },
     playingIndex:0,
-    sequence:0, //0顺序播放
+    sequence:0, //0为顺序播放,1为心动模式，2为循环播放，3为单曲循环，4为随机播放
   },
   getters: {
   },
@@ -48,7 +52,6 @@ export default createStore({
       state.current = value;
     },
     changeSlider(state,value){
-      console.log(value);
       state.slider = value;
     },
     setSongList(state,value){
@@ -60,17 +63,28 @@ export default createStore({
       }else{
         state.playingIndex = value;
       }
-      
     },
     nextSong(state){
       switch (state.sequence){
         case 0:
-          this.commit('changePlayingIndex',state.playingIndex+1);
-          if(state.playingIndex >= state.songList.length){
+          if(state.playingIndex+1 === state.songList.length){
             this.commit('changeIsPlaying',false);
-          }else{
-            this.dispatch('changeSong',state.songList[state.playingIndex].id)
+            break;
           }
+          this.commit('changePlayingIndex',state.playingIndex+1);
+          this.dispatch('changeSong',state.songList[state.playingIndex].id);
+          break;
+        case 1:
+          break;
+        case 2:
+          this.commit('changePlayingIndex',(state.playingIndex+1) % state.songList.length);
+          this.dispatch('changeSong',state.songList[state.playingIndex].id)
+          break;
+        case 3:
+          break;
+        case 4:
+          this.commit('changePlayingIndex',Math.floor(Math.random()*state.songList.length));
+          this.dispatch('changeSong',state.songList[state.playingIndex].id)
           break;
       }
     },
@@ -81,6 +95,9 @@ export default createStore({
           this.dispatch('changeSong',state.songList[state.playingIndex].id);
           break;
       }
+    },
+    changeSequence(state,value){
+      state.sequence = (value % 5);
     }
   },
   actions: {
@@ -97,6 +114,9 @@ export default createStore({
         method:'get',
         url:`/api/lyric?id=${id}`
       })
+      if(!urlRes.data[0].url){
+        console.log('该歌曲没有音频文件')
+      }
       const obj = {
         url: urlRes.data[0].url,
         id :songRes.songs[0].id,

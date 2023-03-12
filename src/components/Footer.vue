@@ -1,38 +1,45 @@
 <template>
   <div id="player">
-    <div id="playerLeft" :class="{'reverse': isSpreading}" :style="{'opacity':songInfo.url  ? 1 : 0}">
-      <div id="playerPageFn">
-        <div class="fold"><DownOutlined @click="handleSpread(false)"/></div>
-        <div class="spreadFn"><HeartOutlined /></div>
-        <div class="spreadFn"><FolderAddOutlined /></div>
-        <div class="spreadFn"><DownloadOutlined /></div>
-        <div class="spreadFn"><ShareAltOutlined /></div>
-      </div>
-      <div id="playerSongInfo">
-        <div id="playerSongImg" @click="handleSpread(true)">
-          <img :src="songInfo?.al?.picUrl ?? ''" />
-          <div class="mask" ></div>
-          <UpOutlined />
+    <div class="overflowhidden">
+      <div id="playerLeft" :class="{'reverse': isSpreading}" :style="{'opacity':songInfo.url  ? 1 : 0}">
+        <div id="playerPageFn">
+          <div class="fold"><DownOutlined @click="handleSpread(false)"/></div>
+          <div class="spreadFn"><HeartOutlined /></div>
+          <div class="spreadFn"><FolderAddOutlined /></div>
+          <div class="spreadFn"><DownloadOutlined /></div>
+          <div class="spreadFn"><ShareAltOutlined /></div>
         </div>
-        <div class="songInfo">
-          <div class="songName">
-            <div class="name">{{ songInfo.name }}</div>
-            <div class="privilege">2</div>
-            <div class="like">3</div>
+        <div id="playerSongInfo">
+          <div id="playerSongImg" @click="handleSpread(true)">
+            <img :src="songInfo?.al?.picUrl ?? ''" />
+            <div class="mask" ></div>
+            <UpOutlined />
           </div>
-          <div class="songSinger">
-            <template v-for="(item,index) in songInfo.ar" :key="item.id">
-              {{ index !== 0 ? ' /' : ' ' }}
-              <router-link to="/">{{ item.name }}</router-link>
-            </template>
+          <div class="songInfo">
+            <div class="songName">
+              <div class="name">{{ songInfo.name }}</div>
+              <div class="privilege">2</div>
+              <div class="like">3</div>
+            </div>
+            <div class="songSinger">
+              <template v-for="(item,index) in songInfo.ar" :key="item.id">
+                {{ index !== 0 ? ' /' : ' ' }}
+                <router-link to="/">{{ item.name }}</router-link>
+              </template>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div id="playerCenter">
       <div id="playerController" >
-        <div>
-          <AlignLeftOutlined class="playerControllerIcon" v-if="sequence === 0"/>
+        <div class="sequence">
+          <AlignLeftOutlined class="playerControllerIcon" v-if="sequence === 0" @click="changeSequence"/>
+          <HeartOutlined class="playerControllerIcon" v-else-if="sequence === 1" @click="changeSequence"/>
+          <RetweetOutlined class="playerControllerIcon" v-else-if="sequence === 2" @click="changeSequence"/>
+          <LoginOutlined class="playerControllerIcon" v-else-if="sequence === 3" @click="changeSequence"/>
+          <QuestionCircleOutlined class="playerControllerIcon" v-else-if="sequence === 4" @click="changeSequence"/>
+          <div class="overlay" :style="{'opacity':isChanging ? 1 : 0}">顺序播放</div>
         </div>
         <div @click="preSong"><StepBackwardOutlined class="playerControllerIcon"/></div>
         <div>
@@ -48,8 +55,8 @@
         <div id="currentTime">
           {{ currentTime }}
         </div>
-        <div id="progressTrack"  :style="{width:`${width}%`}" @click="handleClickProgress" ref="progressRef">
-          <div id="progress" :style="{width:`${percentage}%`}"></div>
+        <div id="progressTrack"  :style="{width:`${width}%`}" @click="handleClickProgress" ref="progressRef" >
+          <div id="progress" :style="{width:`${percentage}%`}" ></div>
           <audio :src=songInfo.url ref="audio" @canplay="handleGetDuration" @timeupdate="handleTimeUpdate" @ended="handleMusicEnded"></audio>
         </div>
         <div id="totalTime">
@@ -60,16 +67,27 @@
     <div id="playeFn">
       <div class="quality"><span>标准</span></div>
       <div class="effect"><CustomerServiceOutlined/></div>
-      <div class="volume"><FilterOutlined :style="{transform:'rotate(90deg)'}"/></div>
+      <div class="volume" :class="{'isHover':isHover}">
+        <div class="volumeBox" @mouseup="handleMouseUp">
+          <div id="volumeTrack" @click="handleClickVolume" ref="volumeRef" > 
+            <div id="volume" :style="{height:`${height}px`,opacity:isMute ? 0 : 1}">
+              <div class="trackDot" ref="volumeDot" @mousedown="handleMouseDown"> </div>
+            </div>
+          </div> 
+        </div>
+
+        <FilterOutlined :style="{transform:'rotate(90deg)'}" @click="mute" v-if="!isMute"/>
+        <AudioMutedOutlined @click="cancelMute" v-else/>
+      </div>
       <div class="accompany"><TeamOutlined /></div>
       <div class="list" @click="getSongList"><MenuUnfoldOutlined /></div>
     </div>
   </div>
 </template>
 <script>
-import { computed, defineComponent, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, defineComponent, nextTick, ref, watch } from 'vue';
 import {useStore} from 'vuex'
-import {PlayCircleFilled,AlignLeftOutlined,StepBackwardOutlined,StepForwardOutlined,PauseCircleFilled,CustomerServiceOutlined,FilterOutlined,TeamOutlined,MenuUnfoldOutlined,UpOutlined,DownOutlined,HeartOutlined,FolderAddOutlined,DownloadOutlined,ShareAltOutlined} from '@ant-design/icons-vue'
+import {PlayCircleFilled,AlignLeftOutlined,StepBackwardOutlined,StepForwardOutlined,PauseCircleFilled,CustomerServiceOutlined,FilterOutlined,TeamOutlined,MenuUnfoldOutlined,UpOutlined,DownOutlined,HeartOutlined,FolderAddOutlined,DownloadOutlined,ShareAltOutlined,RetweetOutlined,LoginOutlined,QuestionCircleOutlined,AudioMutedOutlined,} from '@ant-design/icons-vue'
 import timeFormat from '@/utils/timeFormat';
 export default defineComponent({
   components:{
@@ -88,6 +106,10 @@ export default defineComponent({
     FolderAddOutlined,
     DownloadOutlined,
     ShareAltOutlined,
+    RetweetOutlined,
+    LoginOutlined,
+    QuestionCircleOutlined,
+    AudioMutedOutlined,
   },
   props:{
     skipTime:{
@@ -98,17 +120,22 @@ export default defineComponent({
   setup(props,{emit}){
     const audio = ref(null);
     const progressRef = ref(null);
+    const volumeRef = ref(null);
+    const volumeDot = ref(null)
     const percentage = ref(0);
     const width = ref(80);
+    const height = ref(50);
+    const isMute = ref(false);
     const duration = ref(0);
     const store = useStore();
+    const isChanging = ref(false);
+    const isHover = ref(false);
     const handleSpread = (value)=>{
       store.commit('changeIsSpreading',value)
       emit('spread');
     }
-    
-    watch(()=>props.skipTime,(newValue)=>{
-      audio.value.currentTime = newValue;
+    const ifCircle = computed(()=>{
+      return store.state.sequence === 3;
     })
     const isSpreading = computed(()=>{
       return store.state.isSpreading;
@@ -122,16 +149,11 @@ export default defineComponent({
     const getSongList = ()=>{
       store.commit('changeSlider',store.state.slider == 1 ? 0 : 1);
     }
-    watch(()=>songInfo.value.id,(newValue)=>{
-      nextTick(()=>{
-        play()
-      })
-    })
     const play = ()=>{
       store.commit('changeIsPlaying',true);
       audio.value.play();
     }
-    let totalTime = ref(0);
+    let totalTime = ref("00:00");
     const currentTime = computed(()=>{
       return timeFormat(store.state.current * 1000);
     })
@@ -149,25 +171,90 @@ export default defineComponent({
       percentage.value = (e.target.currentTime * 100 / duration.value).toFixed(3);
     }
     const handleMusicEnded = (e)=>{
-      store.commit('nextSong');
+      if(ifCircle.value){
+        play();
+      }else{
+        store.commit('nextSong');
+      }
     }
     const handleClickProgress = (e)=>{
       percentage.value = ((e.clientX - progressRef.value.offsetLeft) / progressRef.value.offsetWidth).toFixed(2);
       audio.value.currentTime = percentage.value * duration.value;
     }
-    watch(()=>store.state.current,(newValue)=>{
-    })
     const nextSong = ()=>{
       store.commit('nextSong')
     }
     const preSong = ()=>{
       store.commit('preSong');
     }
-    onMounted(()=>{
-      watch(progressRef.value.offsetWidth,(newValue)=>{
-        console.log(newValue);
-        console.log(props.skipTime);
+    let timer = null;
+    const changeSequence = ()=>{
+      if(timer) clearTimeout(timer);
+      isChanging.value = true;
+      store.commit('changeSequence',sequence.value+1);
+      timer = setTimeout(()=>{
+        isChanging.value = false;
+      },800)
+    }
+    const mute = ()=>{
+      isMute.value = true;
+    }
+    const cancelMute = ()=>{
+      isMute.value = false;
+      
+    }
+    const handleClickVolume = (e)=>{
+      if(e.target !== volumeDot.value){
+        height.value = (volumeRef.value.offsetHeight - e.layerY);
+      }
+    }
+    const handleDotDrag = (e)=>{
+      console.log(1);
+      if(height.value <=0 || height.value >= volumeRef.value.offsetHeight) return;
+      if(e.pageX !== 0){
+        height.value -= e.layerY;
+      }
+    }
+    let startY;
+    const handleMouseDown = (e)=>{
+      startY = e.clientY;
+      console.log('down');
+      window.addEventListener('mousemove',handleMouseMove);
+      window.addEventListener('mouseup',handleMouseUp);
+      isHover.value = true;
+    }
+    const handleMouseUp = (e)=>{
+      setTimeout(()=>{
+        isHover.value = false;
+      },1000)
+      window.removeEventListener('mousemove',handleMouseMove);
+      window.removeEventListener('mouseup',handleMouseUp);
+    }
+    let handleMouseMove = (e)=>{
+      if(height.value + startY - e.clientY >= volumeRef.value.offsetHeight){
+        height.value = volumeRef.value.offsetHeight;
+      }else if(height.value + startY - e.clientY <= 0){
+        height.value = 0;          
+      }else{
+        height.value += startY-e.clientY;
+      }
+      startY = e.clientY;
+    }
+    watch(()=>songInfo.value.id,(newValue)=>{
+      nextTick(()=>{
+        play()
       })
+    })
+    watch(height,(newValue)=>{
+      audio.value.volume = newValue / volumeRef.value.offsetHeight
+      if(height.value === 0){
+        mute();
+      }else{
+        cancelMute();
+      }
+    })
+    watch(()=>props.skipTime,(newValue)=>{
+      audio.value.currentTime = newValue;
     })
     return {
       audio,
@@ -191,6 +278,17 @@ export default defineComponent({
       sequence,
       preSong,
       props,
+      changeSequence,
+      isChanging,
+      height,
+      mute,
+      isMute,
+      handleClickVolume,
+      volumeRef,
+      volumeDot,
+      handleMouseDown,
+      isHover,
+      cancelMute,
     }
   }
 })
@@ -200,9 +298,12 @@ export default defineComponent({
 #player{
   display: flex;
   justify-content: space-between;
-  overflow: hidden;
+  // overflow: hidden;
   line-height: 70px;
   position: relative;
+  .overflowhidden{
+    overflow: hidden;
+  }
   #playerLeft{
     margin-left: 10px;
     transform: translateY(-50%);
@@ -323,6 +424,30 @@ export default defineComponent({
     width: 37%;
     min-width: 450px;
     height: 100%;
+    .sequence{
+      position: relative;
+      /* 火狐 */
+      -moz-user-select: none;
+      /* Safari 和 欧朋 */
+      -webkit-user-select: none;
+      /* IE10+ and Edge */
+      -ms-user-select: none;
+      /* Standard syntax 标准语法(谷歌) */
+      user-select: none;
+      .overlay{
+        position: absolute;
+        left: -23px;
+        top: -18px;
+        width: 100px;
+        height: 30px;
+        line-height: 30px;
+        border-radius: 15px;
+        background-color: #222;
+        font-size: 12px;
+        transition: opacity 1s;
+        opacity: 0;
+      }
+    }
     #progressBar{
       display: flex;
       justify-content: center;
@@ -384,14 +509,73 @@ export default defineComponent({
     align-items: center;
     font-size: 18px;
     color: @black-font-color;
+
     .quality span{
       font-size: 12px;
       padding: 1px 4px;
       border: solid 1px @black-font-color;
     }
+    .volume{
+      position: relative;
+      &:hover .volumeBox,
+      &.isHover .volumeBox{
+        opacity: 1;
+      }
+      .volumeBox{
+        opacity: 0;
+        top: -86px;
+        left: -5px;
+        position: absolute;
+        width: 28px;
+        height: 100px;
+        background-color: #252525;
+        border: solid 1px #303030;
+        box-shadow: 0 0 6px #151515;
+        border-radius: 4px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-top: 7px;
+        padding-bottom: 7px;
+        #volumeTrack{
+          height: 100%;
+          width: 4px;
+          background-color: #3b3b3b;
+          border-radius: 2px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-end;
+          #volume{
+            width: 100%;
+            background-color: #ec4141;
+            border-radius: 2px;
+          }
+        }
+        
+        &::after{
+          position: absolute;
+          bottom: -5px;
+          left: 9px;
+          content: '';
+          border: solid 5px #252525;
+          border-radius: 5px;
+          border-top-color: transparent;
+        }
+      }
+    }
+    
     div{
       cursor: pointer;
     }
+  }
+  .trackDot{
+    cursor: pointer;
+    height: 4px;
+    width: 100%;
+    border-radius: 50%;
+    transform: scale(3);
+    background-color: #ec4141;
   }
 }
 </style>

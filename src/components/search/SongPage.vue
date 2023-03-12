@@ -40,40 +40,36 @@ const {proxy:{$axios}} = getCurrentInstance();
 const columns = [
   {
     dataIndex: 'number',
-    width:'58px'
+    width:'16px',
   },
   {
     dataIndex: 'like',
-    width:'16px'
+    width:'16px',
   },
   {
     dataIndex: 'download',
-    width:'16px'
+    width:'16px',
   },
   {
     title: '音乐标题',
     dataIndex: 'song',
-    width:'36%'
   },
   {
     title: '歌手',
     dataIndex: 'singer',
-    width:'15%'
+    width:'20%',
   },
   {
     title: '专辑',
     dataIndex: 'album',
-    width:'18%'
   },
   {
     title: '时长',
     dataIndex: 'dt',
-    width:'8%'
   },
   {
     title: '热度',
     dataIndex: 'pop',
-    width:''
   },
 ];
 const customRow = (record) => {
@@ -86,18 +82,17 @@ const customRow = (record) => {
 const dataSource = ref([]);
 const route = useRoute();
 let current = ref(1);
-const offset = ref(0);
 const store = useStore();
-const songList = [];
+let songList = [];
 const getList = async (keyword)=>{
   spinning.value = true;
   const {data:res} = await $axios({
     method:'get',
-    url:`/api/cloudsearch?keywords=${keyword}&limit=100&offset=${offset.value}`
+    url:`/api/cloudsearch?keywords=${keyword}&limit=100&offset=${(current.value-1)*100}`
   })
   spinning.value = false;
-  offset.value++;
   dataSource.value = [];
+  songList = [];
   const songs = res.result.songs;
   songs.forEach((item,index)=>{
     dataSource.value.push({
@@ -106,9 +101,9 @@ const getList = async (keyword)=>{
       number:(current.value-1)*100+index+1,
       like:<HeartOutlined/>,
       download:<DownloadOutlined/>,
-      song: item.name,
+      song: <div class="song">{item.name}</div>,
       singer: <route-link data-name={item.ar[0].name}>{item.ar[0].name}</route-link>,
-      album: item.al.name,
+      album: <div class="album">{item.al.name}</div>,
       dt:timeFormat(item.dt),
       pop:<Pop>{item.pop}</Pop>,
       })
@@ -158,6 +153,15 @@ watch(()=>route.query.keyword,(newValue)=>{
             background-color: transparent;
         }
         :deep(.ant-table-content){
+            .album{
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              width: 200px;
+            }
+            .song{
+              width: 250px;
+            }
             .ant-table-cell{
                 background-color: transparent;
                 border-bottom: 0;
@@ -166,6 +170,9 @@ watch(()=>route.query.keyword,(newValue)=>{
                 color: @black-font-color;
                 font-size: 13px;
                 transition: none;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .table-striped td {
                 background-color: #2f2f2f;
