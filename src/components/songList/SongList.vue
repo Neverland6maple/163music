@@ -43,8 +43,8 @@ const columns = [
 const songListRef = ref(null);
 const dataSource = ref([]);
 const store = useStore();
-const songList = computed(()=>store.state.songList);
-const playingIndex = computed(()=>store.state.playingIndex)
+const songList = computed(()=>store.state.player.songList);
+const playingIndex = computed(()=>store.state.player.playingIndex)
 dataSource.value = songList.value.map((e,index)=>({
     id:e.id,
     index,
@@ -68,8 +68,8 @@ const customRow = (record) => {
   };
 }
 const handlePlaySong = (id,index)=>{
-  store.commit('changePlayingIndex',index);
-  store.dispatch('changeSong',id);
+  store.commit('player/changePlayingIndex',index);
+  store.dispatch('player/changeSong',id);
 }
 watch(playingIndex,()=>{
     setScroll(playingIndex.value);
@@ -85,6 +85,7 @@ watch(playingIndex,()=>{
     background-color: #363636;
     display: flex;
     flex-direction: column;
+    z-index: 999;
     .songListHeader{
         display: flex;
         flex-direction: column;

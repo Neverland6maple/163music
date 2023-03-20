@@ -39,7 +39,7 @@
           <RetweetOutlined class="playerControllerIcon" v-else-if="sequence === 2" @click="changeSequence"/>
           <LoginOutlined class="playerControllerIcon" v-else-if="sequence === 3" @click="changeSequence"/>
           <QuestionCircleOutlined class="playerControllerIcon" v-else-if="sequence === 4" @click="changeSequence"/>
-          <div class="overlay" :style="{'opacity':isChanging ? 1 : 0}">顺序播放</div>
+          <div class="overlay" v-show="isChanging">{{ sequenceMap[sequence] }}</div>
         </div>
         <div @click="preSong"><StepBackwardOutlined class="playerControllerIcon"/></div>
         <div>
@@ -85,7 +85,7 @@
   </div>
 </template>
 <script>
-import { computed, defineComponent, nextTick, ref, watch } from 'vue';
+import { computed, defineComponent, nextTick, onMounted, ref, watch } from 'vue';
 import {useStore} from 'vuex'
 import {PlayCircleFilled,AlignLeftOutlined,StepBackwardOutlined,StepForwardOutlined,PauseCircleFilled,CustomerServiceOutlined,FilterOutlined,TeamOutlined,MenuUnfoldOutlined,UpOutlined,DownOutlined,HeartOutlined,FolderAddOutlined,DownloadOutlined,ShareAltOutlined,RetweetOutlined,LoginOutlined,QuestionCircleOutlined,AudioMutedOutlined,} from '@ant-design/icons-vue'
 import timeFormat from '@/utils/timeFormat';
@@ -134,47 +134,56 @@ export default defineComponent({
       store.commit('changeIsSpreading',value)
       emit('spread');
     }
+    const sequenceMap = {
+      0:'顺序播放',
+      1:'心动模式',
+      2:'循环播放',
+      3:'单曲循环',
+      4:'随机播放',
+    }
+    const playingIndex = computed(()=>store.state.player.playingIndex);
+    const songListLength = computed(()=>store.state.player.songList.length);
     const ifCircle = computed(()=>{
-      return store.state.sequence === 3;
+      return store.state.player.sequence === 3;
     })
     const isSpreading = computed(()=>{
       return store.state.isSpreading;
     })
     const isPlaying = computed(()=>{
-      return store.state.isPlaying;
+      return store.state.player.isPlaying;
     })
     const songInfo = computed(()=>{
-      return store.state?.songInfo ?? {};
+      return store.state.player?.songInfo ?? {};
     })
     const getSongList = ()=>{
       store.commit('changeSlider',store.state.slider == 1 ? 0 : 1);
     }
     const play = ()=>{
-      store.commit('changeIsPlaying',true);
+      store.commit('player/changeIsPlaying',true);
       audio.value.play();
+    }
+    const pause = ()=>{
+      store.commit('player/changeIsPlaying',false);
+      audio.value.pause();
     }
     let totalTime = ref("00:00");
     const currentTime = computed(()=>{
-      return timeFormat(store.state.current * 1000);
+      return timeFormat(store.state.player.current * 1000);
     })
-    const sequence = computed(()=>store.state.sequence);
-    const pause = ()=>{
-      store.commit('changeIsPlaying',false);
-      audio.value.pause();
-    }
+    const sequence = computed(()=>store.state.player.sequence);
     const handleGetDuration = (e)=>{
       duration.value = e.target.duration;
       totalTime.value = timeFormat(e.target.duration * 1000);
     }
     const handleTimeUpdate = (e)=>{
-      store.commit('setCurrent',e.target.currentTime);
+      store.commit('player/setCurrent',e.target.currentTime);
       percentage.value = (e.target.currentTime * 100 / duration.value).toFixed(3);
     }
     const handleMusicEnded = (e)=>{
-      if(ifCircle.value){
-        play();
+      if(playingIndex.value + 1 === songListLength.value && sequence.value === 0){
+        pause();
       }else{
-        store.commit('nextSong');
+        nextSong()
       }
     }
     const handleClickProgress = (e)=>{
@@ -182,16 +191,24 @@ export default defineComponent({
       audio.value.currentTime = percentage.value * duration.value;
     }
     const nextSong = ()=>{
-      store.commit('nextSong')
+      if(ifCircle.value){
+        play();
+      }else{
+        store.dispatch('player/nextSong');
+      }
     }
     const preSong = ()=>{
-      store.commit('preSong');
+      if(ifCircle.value){
+        play();
+      }else{
+        store.dispatch('player/preSong');
+      }
     }
     let timer = null;
     const changeSequence = ()=>{
       if(timer) clearTimeout(timer);
       isChanging.value = true;
-      store.commit('changeSequence',sequence.value+1);
+      store.commit('player/changeSequence',sequence.value+1);
       timer = setTimeout(()=>{
         isChanging.value = false;
       },800)
@@ -201,18 +218,10 @@ export default defineComponent({
     }
     const cancelMute = ()=>{
       isMute.value = false;
-      
     }
     const handleClickVolume = (e)=>{
       if(e.target !== volumeDot.value){
         height.value = (volumeRef.value.offsetHeight - e.layerY);
-      }
-    }
-    const handleDotDrag = (e)=>{
-      console.log(1);
-      if(height.value <=0 || height.value >= volumeRef.value.offsetHeight) return;
-      if(e.pageX !== 0){
-        height.value -= e.layerY;
       }
     }
     let startY;
@@ -256,6 +265,18 @@ export default defineComponent({
     watch(()=>props.skipTime,(newValue)=>{
       audio.value.currentTime = newValue;
     })
+    onMounted(()=>{
+      watch(isPlaying,(newValue)=>{
+        if(newValue){
+          audio.value.play();
+        }else{
+          audio.value.pause();
+        }
+      },{
+        immediate:true
+        })
+    })
+    
     return {
       audio,
       progressRef,
@@ -289,6 +310,7 @@ export default defineComponent({
       handleMouseDown,
       isHover,
       cancelMute,
+      sequenceMap,
     }
   }
 })
@@ -445,7 +467,6 @@ export default defineComponent({
         background-color: #222;
         font-size: 12px;
         transition: opacity 1s;
-        opacity: 0;
       }
     }
     #progressBar{

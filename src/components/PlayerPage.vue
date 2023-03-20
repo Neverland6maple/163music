@@ -42,14 +42,10 @@ export default defineComponent({
     },
     setup(){
     const store = useStore();
-    const handleSpread = ()=>{
-      console.log(store.state.isSpreading);
-    }
     const isSpreading = computed(()=>store.state.isSpreading);
-    const songInfo = computed(()=>store.state.songInfo);
-    const isPlaying = computed(()=>store.state.isPlaying);
+    const isPlaying = computed(()=>store.state.player.isPlaying);
+    const songInfo = computed(()=>store.state.player.songInfo);
     return {
-      handleSpread,
       isSpreading,
       songInfo,
       isPlaying,

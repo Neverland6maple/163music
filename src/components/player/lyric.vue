@@ -36,7 +36,7 @@ const boxHeight = ref(0);
 const box = ref(null);
 let scrollY = 0;
 const middle = ref(-1);
-const current = computed(()=>store.state.current);
+const current = computed(()=>store.state.player.current);
 const activeIndex = ref(0);
 const scrollH = ref(0);
 const lyricRef = ref(null);

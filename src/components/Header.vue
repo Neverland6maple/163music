@@ -62,8 +62,8 @@
                 <div id="userImg"><img src="@/assets/user.jpg" alt=""></div>
                 <a-dropdown :trigger="['click']">
                     <a class="ant-dropdown-link" @click.prevent>
-                        <span id="username">
-                            没见过这么帅的名字
+                        <span id="username" @click="toLogin">
+                            未登录
                         </span>
                         <DownOutlined />
                     </a>
@@ -132,12 +132,15 @@ export default defineComponent({
         const handleSpread = ()=>{
             store.commit('changeIsSpreading',false);
         }
-        
+        const toLogin = ()=>{
+            store.commit('changeLoginShow',true)
+        }
         return {
             handleSearch,
             keyword,
             myIsSpreading,
             handleSpread,
+            toLogin,
         }
      
     }
@@ -233,12 +236,13 @@ export default defineComponent({
     }
     #hdRight{
         float: right;
+        height: 100%;
         #user{
             float: right;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 148px;
+            max-width: 150px;
             height: 100%;
             #userImg{
                 height: 30px;
@@ -252,17 +256,21 @@ export default defineComponent({
                 }
             }
             .ant-dropdown-trigger{
-                position: relative;
                 #username{
-                    position: absolute;
-                    left: 0;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
-                    width: 80%;
+                    max-width: 80%;
+                    text-align: left;
+                    margin-right: 10px;
                 }
+                margin-left: 10px;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
                 text-align: right;
-                width: 75%;
+                max-width: 75%;
                 height: 100%;
                 font-size: 12px;
                 color: #ccc;

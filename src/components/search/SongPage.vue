@@ -120,9 +120,10 @@ const  handleTableChange = async (pagination,filters, sorter, { currentDataSourc
     getList(route.query.keyword);
 }
 const handlePlaySong = (id,index)=>{
-  store.commit('setSongList',songList);
-  store.commit('changePlayingIndex',index);
-  store.dispatch('changeSong',id);
+  store.commit('player/setSongList',songList);
+  store.commit('player/changePlayingIndex',index);
+  store.dispatch('player/changeSong',id);
+  store.commit('player/clearHistoryList',index);
 }
 const pagination = reactive({
     pageSize:100,

@@ -9,8 +9,11 @@
           <mySlider></mySlider>
         </a-layout-sider>
         <a-layout-content>
-          <router-view></router-view>
+          <Suspense>
+              <router-view></router-view>
+          </Suspense>
         </a-layout-content>
+        <Login v-if="loginShow"></Login>
         <PlayerPage></PlayerPage>
         <SongList v-if="slider === 1"></SongList>
       </a-layout>
@@ -24,26 +27,25 @@
 import mySlider from '@/components/Slider.vue'
 import myHeader from '@/components/Header.vue'
 import myFooter from '@/components/Footer.vue'
-import {provide,ref} from 'vue'
+import {ref} from 'vue'
 import {useStore} from 'vuex'
 import { computed } from '@vue/reactivity'
 import PlayerPage from './components/PlayerPage.vue'
 import SongList from '@/components/songList/SongList.vue'
+import Login from '@/components/Login.vue'
 export default {
-  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList  },
+  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList , Login ,  },
   setup(){
     const store = useStore();
     const slider = computed(()=>store.state.slider);
     const isSpreading = computed(()=>store.state.isSpreading);
     const skipTime = ref(0);
-    const setSkipTime = (v)=>{
-      skipTime.value = v;
-    }
-    provide('setSkipTime',setSkipTime);
+    const loginShow = computed(()=>store.state.loginShow);
     return {
       isSpreading,
       slider,
       skipTime,
+      loginShow,
     }
   }
 }
