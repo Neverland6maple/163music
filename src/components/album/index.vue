@@ -66,7 +66,7 @@
 <script setup>
 import PlayAll from '../unit/PlayAll.vue';
 import TransparemtBtn from '../unit/TransparemtBtn.vue';
-import myTable from '@/components/unit/Table.vue';
+import myTable from '@/components/unit/MyTable.vue';
 import albumComment from '@/components/album/albumComment.vue';
 import albumDescription from '@/components/album/albumDescription.vue';
 import {FolderAddOutlined ,DownloadOutlined,ShareAltOutlined,LoadingOutlined,HeartOutlined } from '@ant-design/icons-vue'
@@ -74,7 +74,7 @@ import Pop from '@/components/search/Pop.vue'
 import { getCurrentInstance, watch, reactive,ref,h,computed } from 'vue';
 import timeFormat from '@/utils/timeFormat';
 import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import nameFormat from '@/utils/nameFormat';
 import dateFormat from '@/utils/dateFormat';
 const spinning = ref(false);
@@ -105,7 +105,18 @@ const columns = [
   {
     title: '专辑',
     dataIndex: 'album',
-    width:'19%'
+    width:'19%',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:(event) => {
+          if(record.album.props.albumId == albumId.value){
+            console.log('是同一张专辑');
+          }else{
+            router.push(`/album/${record.album.props.albumId}`)
+          }
+        }
+      }
+    }
   },
   {
     title: '时长',
@@ -119,6 +130,7 @@ const columns = [
 ];
 const dataSource = ref([]);
 const route = useRoute();
+const router = useRouter();
 const store = useStore();
 const songs = ref([]);
 const album = ref({});
@@ -150,7 +162,7 @@ const getList = async (id)=>{
       download:<DownloadOutlined/>,
       song: <div class="song">{item.name}</div>,
       singer: <route-link data-name={item.ar[0].name}>{item.ar[0].name}</route-link>,
-      album: <div class="album">{item.al.name}</div>,
+      album: <div class="album" albumId={item.al.id}>{item.al.name}</div>,
       dt:timeFormat(item.dt),
       pop:<Pop>{item.pop}</Pop>,
       })

@@ -24,118 +24,121 @@
             </div>
         </div>
         <div id="commentList">
-            <div id="hotComment" v-if="hotComment > 0">
-                <h3 class="title">精彩评论</h3>
-                <div class="commentList">
-                    <div class="commentItem">
-                        <div class="userPic">
-                            <img src="" alt="" class="picImg">
-                        </div>
-                        <div class="commentBody">
-                            <div class="commentline">
-                                <div class="username">
-                                    小明
-                                </div>
-                                :
-                                <div class="comment">
-                                    123123123123,123123123
-                                </div>
+            <a-spin :indicator="indicator" tip="加载中" :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
+            <template v-if="!spinning">
+                <div id="hotComment" v-if="hotComment > 0 && current === 1">
+                    <h3 class="title">精彩评论</h3>
+                    <div class="commentList">
+                        <div class="commentItem">
+                            <div class="userPic">
+                                <img src="" alt="" class="picImg">
                             </div>
-                            <div class="commentTime">
-                                2022年12月9日 04:44
-                            </div>
-                        </div>
-                        <div class="commentOther">
-                            <span class="anticon">举报</span>
-                            <LikeOutlined />
-                            <ShareAltOutlined />
-                            <CommentOutlined />
-                        </div>
-                    </div>
-                    <div class="commentItem">
-                        <div class="userPic">
-                            <img src="" alt="" class="picImg">
-                        </div>
-                        <div class="commentBody">
-                            <div class="commentline">
-                                <div class="username">
-                                    小明
+                            <div class="commentBody">
+                                <div class="commentline">
+                                    <div class="username">
+                                        小明
+                                    </div>
+                                    :
+                                    <div class="comment">
+                                        123123123123,123123123
+                                    </div>
                                 </div>
-                                :
-                                <div class="comment">
-                                    123123123123,123123123
+                                <div class="commentTime">
+                                    2022年12月9日 04:44
                                 </div>
                             </div>
-                            <div class="commentTime">
-                                2022年12月9日 04:44
+                            <div class="commentOther">
+                                <span class="anticon">举报</span>
+                                <LikeOutlined />
+                                <ShareAltOutlined />
+                                <CommentOutlined />
                             </div>
                         </div>
-                        <div class="commentOther">
-                            <span class="anticon">举报</span>
-                            <LikeOutlined />
-                            <ShareAltOutlined />
-                            <CommentOutlined />
-                        </div>
-                    </div>
-                    <div class="commentItem">
-                        <div class="userPic">
-                            <img src="" alt="" class="picImg">
-                        </div>
-                        <div class="commentBody">
-                            <div class="commentline">
-                                <div class="username">
-                                    小明
-                                </div>
-                                :
-                                <div class="comment">
-                                    123123123123,123123123
-                                </div>
+                        <div class="commentItem">
+                            <div class="userPic">
+                                <img src="" alt="" class="picImg">
                             </div>
-                            <div class="commentTime">
-                                2022年12月9日 04:44
-                            </div>
-                        </div>
-                        <div class="commentOther">
-                            <span class="anticon">举报</span>
-                            <LikeOutlined />
-                            <ShareAltOutlined />
-                            <CommentOutlined />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="latestComment">
-                <h3 class="title">最新评论</h3>
-                <div class="commentList">
-                    <div class="commentItem" v-for="(item) in latestComment" :key="item.commentId">
-                        <div class="userPic">
-                            <img :src="item.user.avatarUrl" alt="" class="picImg">
-                        </div>
-                        <div class="commentBody">
-                            <div class="commentline">
-                                <div class="username">
-                                    {{ item.user.nickname }}
-                                    <img :src="item.user.vipRights.associator ? item.user.vipRights.associator.iconUrl : (item.user.vipRights.musicPackage ? item.user.vipRights.musicPackage.iconUrl : '')" alt="" v-if="item.user.vipRights">
+                            <div class="commentBody">
+                                <div class="commentline">
+                                    <div class="username">
+                                        小明
+                                    </div>
+                                    :
+                                    <div class="comment">
+                                        123123123123,123123123
+                                    </div>
                                 </div>
-                                :
-                                <div class="comment">
-                                    {{ item.content }}
+                                <div class="commentTime">
+                                    2022年12月9日 04:44
                                 </div>
                             </div>
-                            <div class="commentTime">
-                                {{ dateFormat(item.time,true) + ' ' + item.timeStr}}
+                            <div class="commentOther">
+                                <span class="anticon">举报</span>
+                                <LikeOutlined />
+                                <ShareAltOutlined />
+                                <CommentOutlined />
                             </div>
                         </div>
-                        <div class="commentOther">
-                            <span class="anticon">举报</span>
-                            <span class="anticon"><LikeOutlined />{{ item.likedCount === 0 ? '' : item.likedCount }}</span>
-                            <ShareAltOutlined />
-                            <CommentOutlined />
+                        <div class="commentItem">
+                            <div class="userPic">
+                                <img src="" alt="" class="picImg">
+                            </div>
+                            <div class="commentBody">
+                                <div class="commentline">
+                                    <div class="username">
+                                        小明
+                                    </div>
+                                    :
+                                    <div class="comment">
+                                        123123123123,123123123
+                                    </div>
+                                </div>
+                                <div class="commentTime">
+                                    2022年12月9日 04:44
+                                </div>
+                            </div>
+                            <div class="commentOther">
+                                <span class="anticon">举报</span>
+                                <LikeOutlined />
+                                <ShareAltOutlined />
+                                <CommentOutlined />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <a-pagination v-model:current="current" :total="50" show-less-items />
+                <div id="latestComment">
+                    <h3 class="title">最新评论</h3>
+                    <div class="commentList">
+                        <div class="commentItem" v-for="(item) in latestComment" :key="item.commentId">
+                            <div class="userPic">
+                                <img :src="item.user.avatarUrl" alt="" class="picImg">
+                            </div>
+                            <div class="commentBody">
+                                <div class="commentline">
+                                    <div class="username">
+                                        {{ item.user.nickname }}
+                                        <img :src="item.user.vipRights.associator ? item.user.vipRights.associator. iconUrl : (item.user.vipRights.musicPackage ? item.user.vipRights.musicPackage.  iconUrl : '')" alt="" v-if="item.user.vipRights && (item.user.vipRights.  associator || item.user.vipRights.musicPackage)" class="vipPic">
+                                    </div>
+                                    :
+                                    <div class="comment">
+                                        {{ item.content }}
+                                    </div>
+                                </div>
+                                <div class="commentTime">
+                                    {{ dateFormat(item.time,true) + ' ' + item.timeStr}}
+                                </div>
+                            </div>
+                            <div class="commentOther">
+                                <span class="anticon">举报</span>
+                                <span class="anticon"><LikeOutlined />{{ item.likedCount === 0 ? '' : item.likedCount }}    </span>
+                                <ShareAltOutlined />
+                                <CommentOutlined />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a-pagination v-model:current="current" :total="50" show-less-items @change="handlePageChange"/>
+            </template>
         </div>
     </div>
 </template>
@@ -146,27 +149,40 @@ import TransparemtBtn from '../unit/TransparemtBtn.vue';
 import {LikeOutlined , ShareAltOutlined , CommentOutlined ,} from '@ant-design/icons-vue'
 const value = ref('');
 const current = ref(1);
+const spinning = ref(false);
 const {proxy:{$axios}} = getCurrentInstance();
+const total = ref(0);
 const hotComment = ref([]);
 const latestComment = ref([]);
 const props = defineProps({
     id:String
 })
-// /api/comment/new?type=0&id=1407551413&pageSize=5&pageNo=2&sortType=3&cursor=1679156612992
-const getList = async ()=>{
+const cursor = ref('');
+const getHotList = async (id)=>{
+    spinning.value = true;
     const {data:res} = await $axios({
         method:'get',
-        url:`/api/comment/new?type=3&id=${props.id}&pageSize=10&pageNo=1&sortType=2`,
+        url:`/api/comment/new?type=3&id=${id}&pageSize=10&pageNo=1&sortType=2`,
     })
     hotComment.value = res.data.comments.filter(e=>e.likedCount > 10);
-
-    const {data:res1} = await $axios({
-        method:'get',
-        url:`/api/comment/new?type=3&id=${props.id}&pageSize=30&pageNo=1&sortType=3`,
-    })
-    latestComment.value = res1.data.comments;
+    spinning.value = false;
 }
-getList();
+const getLatestComments = async (id,pageNo)=>{
+    spinning.value = true;
+    const {data:res} = await $axios({
+        method:'get',
+        url:`/api/comment/new?type=3&id=${id}&pageSize=30&pageNo=${pageNo}&sortType=3&cursor=${cursor.value}`,
+    })
+    latestComment.value = res.data.comments;
+    total.value = res.data.totalCount;
+    cursor.value = res.data.cursor;
+    spinning.value = false;
+}
+const handlePageChange = async (newPage)=>{
+    await getLatestComments(props.id,newPage);
+}
+getHotList(props.id);
+getLatestComments(props.id,current.value);
 </script>
 <style lang="less" scoped>
 #albumComment{
@@ -201,19 +217,13 @@ getList();
             display: flex;
         }
     }
-    #commentList{
-        width: 100%;
-        #hotComment{
-            
-        }
-    }
     .title{
         text-align: left;
         color: #d5d5d5;
         font-weight: bold;
         font-size: 14px;
     }
-    .commentList{
+    #commentList{
         width: 100%;
         .commentItem{
             width: 100%;
@@ -279,12 +289,50 @@ getList();
                 color: #646259;
                 line-height: 20px;
             }
+            .vipPic{
+                width: 40px;
+                height: 14px;
+            }
             &:hover{
                 .commentOther :first-child{
                     visibility:visible
                 }
             }
         }
+        :deep(.ant-pagination){
+            .ant-pagination-item{
+                min-width: 24px;
+                height: 24px;
+                line-height: 24px;
+                border-radius: 4px;
+                background-color: transparent;
+                margin-right: 4px;
+                border-color: #414141;
+                a{
+                    color: #8b8b8b;
+                    font-size: 13px;
+                }
+            }
+            .ant-pagination-item-active{
+                border-color: none;
+                background-color: transparent;
+                a{
+                    color: #8b8b8b;
+                }
+            }
+            .ant-pagination-prev,.ant-pagination-next{
+                min-width: 26px;
+                height: 26px;
+                line-height: 26px;
+                margin-right:4px;
+                .ant-pagination-item-link{
+                    color: #8b8b8b;
+                    border-color: #414141;
+                    background-color: transparent;
+                }
+            }
+        }
+        
 
     }
     .picImg{
