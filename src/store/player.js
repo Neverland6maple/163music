@@ -3,8 +3,9 @@ import timeFormat from '@/utils/timeFormat';
 export default {
   namespaced:true,
   state: {
-    songURL:'',
-    songInfo:{
+    currentTime:parseInt(localStorage.getItem('currentTime')) || 0,
+    songURL:localStorage.getItem('songURL') || '',
+    songInfo:JSON.parse(localStorage.getItem('songInfo')) || {
       url:'',
       id:'',
       name:'',
@@ -12,19 +13,20 @@ export default {
       al:{},
       lyric:[],
     },
-    current:0,
-    songList:[],
+    songList:JSON.parse(localStorage.getItem('songList')) || [],
+    historyList:JSON.parse(localStorage.getItem('historyList')) || [],
+    historyIndex:parseInt(localStorage.getItem('historyIndex')) || -1,
+    playingIndex:parseInt(localStorage.getItem('playingIndex')) || 0,
+    sequence:parseInt(localStorage.getItem('sequence')) || 0, //0为顺序播放,1为心动模式，2为循环播放，3为单曲循环，4为随机播放
+
     isPlaying:false,
-    playingIndex:0,
-    sequence:0, //0为顺序播放,1为心动模式，2为循环播放，3为单曲循环，4为随机播放
-    historyList:[],
-    historyIndex:-1,
   },
   getters: {
   },
   mutations: {
     changeSongURL(state,newURL){
       state.songURL = newURL;
+      localStorage.setItem('songURL',state.songURL);
     },
     changeSongInfo(state,obj){
       state.songInfo.url = obj.url;
@@ -33,15 +35,18 @@ export default {
       state.songInfo.ar = obj.ar;
       state.songInfo.al = obj.al;
       state.songInfo.lyric = obj.lyric;
+      localStorage.setItem('songInfo',JSON.stringify(state.songInfo));
     },
-    setCurrent(state,value){
-      state.current = value;
+    setCurrentTime(state,value){
+      state.currentTime = value;
+      localStorage.setItem('currentTime',state.currentTime);
     },
     changeIsPlaying(state,value){
       state.isPlaying = value;
     },
     setSongList(state,value){
       state.songList = value;
+      localStorage.setItem('songList',JSON.stringify(state.songList));
     },
     changePlayingIndex(state,value){
       if(value < 0){
@@ -49,17 +54,21 @@ export default {
       }else{
         state.playingIndex = value;
       }
+      localStorage.setItem('playingIndex',state.playingIndex);
     },
     changeSequence(state,value){
       state.sequence = (value % 5);
+      localStorage.setItem('sequence',state.sequence);
     },
     clearHistoryList(state,index){
       state.historyList = [index];
       state.historyIndex = 0;
+      localStorage.setItem('historyList',JSON.stringify(state.historyList));
+      localStorage.setItem('historyIndex',state.historyIndex);
     },
     insertSong(state,song){
       state.songList.splice(state.playingIndex+1,0,song);
-      console.log(state.songList);
+      localStorage.setItem('songList',JSON.stringify(state.songList));
     }
   },
   actions: {

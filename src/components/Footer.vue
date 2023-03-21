@@ -168,7 +168,7 @@ export default defineComponent({
     }
     let totalTime = ref("00:00");
     const currentTime = computed(()=>{
-      return timeFormat(store.state.player.current * 1000);
+      return timeFormat(store.state.player.currentTime * 1000);
     })
     const sequence = computed(()=>store.state.player.sequence);
     const handleGetDuration = (e)=>{
@@ -176,7 +176,7 @@ export default defineComponent({
       totalTime.value = timeFormat(e.target.duration * 1000);
     }
     const handleTimeUpdate = (e)=>{
-      store.commit('player/setCurrent',e.target.currentTime);
+      store.commit('player/setCurrentTime',e.target.currentTime);
       percentage.value = (e.target.currentTime * 100 / duration.value).toFixed(3);
     }
     const handleMusicEnded = (e)=>{
@@ -274,9 +274,13 @@ export default defineComponent({
         }
       },{
         immediate:true
-        })
+      })
+      const memorize = watch(duration,(newValue)=>{
+        percentage.value = (store.state.player.currentTime / newValue).toFixed(2);
+        audio.value.currentTime = percentage.value * duration.value;
+        memorize();
+      })
     })
-    
     return {
       audio,
       progressRef,
