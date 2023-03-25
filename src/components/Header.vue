@@ -7,13 +7,13 @@
             <div class="fold" v-else @click="handleSpread">
                     <DownOutlined />
             </div>
-            <div id="subnav">
+            <div id="subnav" ref="subnavRef" @click="hideLock">
                 <div id="goNav">
                     <span id="goPre"></span>
                     <span id="goNext"></span>
                 </div>
                 <div id="search">
-                    <a-input id="ipt" placeholder="Basic usage" v-model:value="keyword" @pressEnter="handleSearch"> 
+                    <a-input id="ipt" placeholder="Basic usage" v-model:value="keyword" @pressEnter="handleSearch(keyword)" @focus="changeIsSearching"> 
                         <template #prefix>
                             <user-outlined type="user" />
                         </template>
@@ -26,6 +26,38 @@
                 </div>
                 <div id="singToSearch">
                     <CustomerServiceOutlined />
+                </div>
+                <div id="searchRecommand" v-if="isSearching">
+                    <div id="searchHistory">
+                        <div class="title">搜索历史<DeleteOutlined class="deleteAllIcon" @click="handleDeleteAll"/></div>
+                        <div id="historyBox" :style="{'max-height': isCheckAll ? '' : '68px'}">
+                            <div class="historyItem" v-for="(item,index) in searchHistory" :key="index" @click="handleSearch(item)">
+                                {{ item }}
+                                <div class="deleteIcon" @click="handleDelete(index,$event)">
+                                    X
+                                </div>
+                            </div>
+                        </div>
+                        <div id="checkAll" @click="changeIsCheckAll" v-if="!isCheckAll">查看全部</div>
+                    </div>
+                    <div id="searchHot">
+                        <div class="title">热搜榜</div>
+                        <div class="hotItem" v-for="(item,index) in hotItem" :key="index">
+                            <div class="itemNo">{{ index }}</div>
+                            <div class="hotItemBody">
+                                <div class="up">
+                                    <div class="itemName">{{ item.searchWord }}</div>
+                                    <div class="itemHot" v-if="item.iconType === 1">
+                                        <img :src="item.iconUrl" alt="" class="hotImg">
+                                    </div>
+                                    <div class="itemPop">{{ item.score }}</div>
+                                </div>
+                                <div class="bottom">
+                                    {{ item.content }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,79 +118,91 @@
     </div>
 </template>
 
-<script>
-import {CustomerServiceOutlined,DownOutlined,SkinOutlined,SettingOutlined,MailOutlined,ExpandOutlined,MinusOutlined,BorderOutlined,CloseOutlined,ExpandAltOutlined} from '@ant-design/icons-vue'
+<script setup>
+import {CustomerServiceOutlined,DownOutlined,SkinOutlined,SettingOutlined,MailOutlined,ExpandOutlined,MinusOutlined,BorderOutlined,CloseOutlined,ExpandAltOutlined,DeleteOutlined} from '@ant-design/icons-vue'
 import { computed } from '@vue/reactivity';
-import { defineComponent, ref,watch} from 'vue';
+import { getCurrentInstance, ref,watch} from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-export default defineComponent({
-    components:{
-        CustomerServiceOutlined,
-        DownOutlined,
-        SkinOutlined,
-        SettingOutlined,
-        MailOutlined,
-        ExpandOutlined,
-        MinusOutlined,
-        BorderOutlined,
-        CloseOutlined,
-        ExpandAltOutlined,
-    },
-    setup(){
-        const keyword = ref('');
-        const router = useRouter();
-        const store = useStore();
-        const isSpreading = computed(()=>store.state.isSpreading);
-        const myIsSpreading = ref(false);
-        watch(isSpreading,(newValue)=>{
-            if(newValue){
-                setTimeout(()=>{
-                    myIsSpreading.value = newValue;
-                },300)
-            }else{
-                myIsSpreading.value = newValue;
-            }
-            
-        },{immediate:true})
-        const handleSearch = ()=>{
-            router.push({
-                path:'/search',
-                query:{
-                    keyword:keyword.value
-                }
-            })
+const keyword = ref('');
+const router = useRouter();
+const store = useStore();
+const isSpreading = computed(()=>store.state.isSpreading);
+const myIsSpreading = ref(false);
+const isCheckAll = ref(false);
+const isSearching = ref(false);
+const subnavRef = ref(null);
+const hotItem = ref([]);
+let lock = false;
+const {proxy:{$axios}} = getCurrentInstance()
+const searchHistory = computed(()=>store.state.history.searchHistory);
+const handleSearch = (value)=>{
+    store.commit('history/setSearchHistory',value);
+    hide();
+    router.push({
+        path:'/search',
+        query:{
+            keyword:value
         }
-        const handleSpread = ()=>{
-            store.commit('changeIsSpreading',false);
-        }
-        const toLogin = ()=>{
-            store.commit('changeLoginShow',true)
-        }
-        return {
-            handleSearch,
-            keyword,
-            myIsSpreading,
-            handleSpread,
-            toLogin,
-        }
-     
+    })
+}
+const hideLock = ()=>{
+    lock = true;
+}
+const hide = function (e){
+    if(!lock){
+        isSearching.value = false;
+        isCheckAll.value = false;
+        window.removeEventListener('click',hide);
     }
-})
+    lock = false;
+}
+const changeIsSearching = async ()=>{
+    isSearching.value = true;
+    window.addEventListener('click',hide);
+
+    const {data:res} = await $axios('/api/search/hot/detail');
+    hotItem.value = res.data;
+}
+const changeIsCheckAll = ()=>{
+    isCheckAll.value = !isCheckAll.value;
+}
+const handleSpread = ()=>{
+    store.commit('changeIsSpreading',false);
+}
+const toLogin = ()=>{
+    store.commit('changeLoginShow',true)
+}
+const handleDelete = (index,e)=>{
+    store.commit('history/deleteSearchHistory',index);
+    e.stopPropagation();
+}
+const handleDeleteAll = ()=>{
+    store.commit('history/deleteSearchHistoryAll');
+}
+watch(isSpreading,(newValue)=>{
+    if(newValue){
+        setTimeout(()=>{
+            myIsSpreading.value = newValue;
+        },300)
+    }else{
+        myIsSpreading.value = newValue;
+    }       
+},{immediate:true})
 </script>
 
 <style lang="less" scoped>
 @import '@/assets/theme.less';
 #myHeader{
+    height: 100%;
+    min-width: 1028px;
+    position: relative;
+    border-bottom: solid 1px #a71e1e;
     &.header-spreading{
         background-color: #2b2b2b;
         border-bottom: 0;
         transition: all 0.05s ease-out;
     }
-    height: 100%;
-    min-width: 1028px;
-    position: relative;
-    border-bottom: solid 1px #a71e1e;
     #hdLeft{
         float: left;
         height: 100%;
@@ -218,6 +262,132 @@ export default defineComponent({
                 color: #adafb2;
                 margin-left: 14px;
                 cursor: pointer;
+            }
+            #searchRecommand{
+                position: absolute;
+                bottom: -530px;
+                left: -14px;
+                width: 360px;
+                height: 520px;
+                background-color: #363636;
+                z-index: 100;
+                border-radius: 8px;
+                box-shadow: 0 0 8px #111;
+                padding: 16px;
+                overflow: auto;
+                #searchHistory{
+                    position: relative;
+                    overflow: hidden;
+                    .deleteAllIcon{
+                        padding-left: 4px;
+                        cursor: pointer;
+                    }
+                    #historyBox{
+                        padding: 6px;
+                        display: flex;
+                        flex-wrap: wrap;
+                        justify-content:left;
+                        .historyItem{
+                            padding: 0px 16px;
+                            border: solid 1px #545454;
+                            line-height: 24px;
+                            margin-right: 10px;
+                            color: #d7d7d7;
+                            border-radius: 12px;
+                            font-size: 13px;
+                            margin-bottom: 7px;
+                            max-width: 100%;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            position: relative;
+                            cursor: pointer;
+                            &:hover .deleteIcon{
+                                display: block;
+                            }
+                            .deleteIcon{
+                                display: none;
+                                content: 'x';
+                                position: absolute;
+                                right: 4px;
+                                top: 0;
+                                font-size: 13px;
+                                color: #717171;
+                                cursor: pointer;
+                            }
+                            
+                        }
+                    }
+                    #checkAll{
+                        position: absolute;
+                        top: 2px;
+                        right: 0;
+                        font-size: 13px;
+                        line-height: 13px;
+                        color: #797979;
+                        cursor: pointer;
+                    }
+                }
+                #searchHot{
+                    .title{
+                        margin-top: 4px;
+                        margin-bottom: 18px;
+                    }
+                    .hotItem{
+                        height: 50px;
+                        width: 100%;
+                        display: flex;
+                        .itemNo{
+                            width: 35px;
+                            height: 100%;
+                            padding-left: 4px;
+                            display: flex;
+                            justify-content: left;
+                            align-items: center;
+                        }
+                        .hotItemBody{
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-start;
+                            line-height: 25px;
+                            font-size: 13px;
+                            .up{
+                                display: flex;
+                                align-items: center;
+                                .itemName,.itemHot,.itemPop{
+                                    margin-right: 4px;
+                                }
+                                .itemName{
+                                    color: #d7d7d7;
+                                }
+                                .itemPop{
+                                    font-size: 12px;
+                                    color: #5e5e5e;
+                                }
+                                .itemHot{
+                                    width: 24px;
+                                    .hotImg{
+                                        width: 100%;
+                                    }
+                                }
+                            }
+                            .bottom{
+                                color: #737373;
+                            }
+                        }
+                    }
+                    .hotItem:nth-child(2),.hotItem:nth-child(3),.hotItem:nth-child(4){
+                        .itemNo{
+                            color: #ff3a3a;
+                        }
+                    }
+                }
+                .title{
+                    text-align: left;
+                    line-height: 16px;
+                    color: #8c8c8c;
+                    font-size: 14px;
+                }
             }
         }
         #search{

@@ -27,7 +27,7 @@
 import mySlider from '@/components/Slider.vue'
 import myHeader from '@/components/Header.vue'
 import myFooter from '@/components/Footer.vue'
-import {ref} from 'vue'
+import {provide, ref} from 'vue'
 import {useStore} from 'vuex'
 import { computed } from '@vue/reactivity'
 import PlayerPage from './components/PlayerPage.vue'
@@ -40,6 +40,10 @@ export default {
     const slider = computed(()=>store.state.slider);
     const isSpreading = computed(()=>store.state.isSpreading);
     const skipTime = ref(0);
+    const setSkipTime = (value)=>{
+      skipTime.value = value;
+    }
+    provide('setSkipTime',setSkipTime);
     const loginShow = computed(()=>store.state.loginShow);
     return {
       isSpreading,

@@ -6,10 +6,11 @@
         size="small"
         :columns="props.columns"
         :data-source="props.dataSource"
-        :pagination="false"
+        :pagination=pagination
         :rowClassName="(record, index) => (index % 2 === 0 ? 'table-striped' : null)"
         :customRow=customRow
         v-if="!props.spinning"
+        @change="handleTableChange"
         />
     </div>
 </template>
@@ -20,8 +21,9 @@ const props = defineProps({
     columns:Array,
     dataSource:Array,
     spinning:Boolean,
+    pagination:Object || Boolean,
 });
-const emit = defineEmits(['handlePlaySong',])
+const emit = defineEmits(['handlePlaySong','handleTableChange'])
 const indicator = h(LoadingOutlined, {
   style: {
     fontSize: '20px',
@@ -39,6 +41,9 @@ const customRow = (record) => {
 const handlePlaySong = (id,index)=>{
     emit('handlePlaySong',id,index);
 }
+const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>{
+   emit('handleTableChange',pagination,filters,sorter,{ currentDataSource });
+}
 </script>
 <style lang="less" scoped>
 @import '@/assets/theme.less';
@@ -55,11 +60,15 @@ const handlePlaySong = (id,index)=>{
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+              cursor: pointer;
             }
             .song{
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+            }
+            .singer{
+              cursor: pointer;
             }
             .ant-table-cell{
                 background-color: transparent;

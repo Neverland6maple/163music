@@ -324,7 +324,6 @@ export default defineComponent({
 #player{
   display: flex;
   justify-content: space-between;
-  // overflow: hidden;
   line-height: 70px;
   position: relative;
   .overflowhidden{

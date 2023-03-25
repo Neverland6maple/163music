@@ -21,51 +21,36 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import SingerTag from '@/components/search/SingerTag.vue'
 import { computed } from '@vue/reactivity';
-import { defineComponent, reactive, ref } from 'vue';
-export default defineComponent({
-    components:{
-        SingerTag,
-    },
-    setup(){
-        const sgInfo = ref({
-            img:require('@/assets/user.jpg'),
-            name:'Kanye West',
-            alias:'侃爷·韦斯特',
-            fans:'52万',
-            songs:'1362',
-        })
-        const searchNav = reactive([
-            {id:'1',title:'单曲',classifier:'首'},
-            {id:'2',title:'歌手',classifier:''},
-            {id:'3',title:'专辑',classifier:''},
-            {id:'4',title:'视频',classifier:''},
-            {id:'5',title:'歌单',classifier:''},
-            {id:'6',title:'歌词',classifier:''},
-            {id:'7',title:'博客',classifier:''},
-            {id:'8',title:'声音',classifier:''},
-            {id:'9',title:'用户',classifier:''},
-        ])
-        const activeKey = ref('1');
-        const activeTitle = computed(()=>{
-            const e = searchNav.find(e=>e.id == activeKey.value);
-            return e.classifier + e.title
-        })
-        const changeNav = (activeKey)=>{
-            console.log(activeKey);
-        }
-        
-        return {
-            sgInfo,
-            searchNav,
-            activeKey,
-            activeTitle,
-            changeNav,
-        }
-    }
+import {  reactive, ref } from 'vue';
+const sgInfo = ref({
+    img:require('@/assets/user.jpg'),
+    name:'Kanye West',
+    alias:'侃爷·韦斯特',
+    fans:'52万',
+    songs:'1362',
 })
+const searchNav = reactive([
+    {id:'1',title:'单曲',classifier:'首'},
+    {id:'2',title:'歌手',classifier:''},
+    {id:'3',title:'专辑',classifier:''},
+    {id:'4',title:'视频',classifier:''},
+    {id:'5',title:'歌单',classifier:''},
+    {id:'6',title:'歌词',classifier:''},
+    {id:'7',title:'博客',classifier:''},
+    {id:'8',title:'声音',classifier:''},
+    {id:'9',title:'用户',classifier:''},
+])
+const activeKey = ref('1');
+const activeTitle = computed(()=>{
+    const e = searchNav.find(e=>e.id == activeKey.value);
+    return e.classifier + e.title
+})
+const changeNav = (activeKey)=>{
+    console.log(activeKey);
+}
 </script>
 
 <style lang="less" scoped>

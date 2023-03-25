@@ -3,7 +3,7 @@
         <div class="songListHeader">
             <h2 class="songListHeaderTitle">当前播放</h2>
             <div class="songListInfo">
-                <div class="songListSum">共xxxx首</div>
+                <div class="songListSum">共{{songList.length}}首</div>
                 <div class="songListCollect"><FolderAddOutlined :style="{fontSize:'16px',marginRight:'4px'}"/>收藏全部</div>
                 <div class="songListClear">清空列表</div>
             </div>

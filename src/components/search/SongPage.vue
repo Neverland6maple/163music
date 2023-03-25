@@ -1,12 +1,10 @@
 <template>
     <div id="SongPage">
-      <a-spin :indicator="indicator" tip="加载中" :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
-      <template v-if="!spinning">
         <div class="playFn">
             <PlayAll></PlayAll>
             <DownloadAll></DownloadAll>
         </div>
-        <a-table
+        <!-- <a-table
             class="ant-table-striped"
             size="small"
             :columns="columns"
@@ -15,70 +13,68 @@
             :rowClassName="(record, index) => (index % 2 === 0 ? 'table-striped' : null)"
             @change="handleTableChange"
             :customRow=customRow
-            />
-      </template>
+            /> -->
+      <MyTable :columns="columns" :data-Source="dataSource" :spinning="spinning" @handlePlaySong="handlePlaySong" :pagination="pagination" @handleTableChange="handleTableChange"></MyTable>
     </div>
 </template>
 <script setup>
 import PlayAll from '@/components/unit/PlayAll.vue'
 import DownloadAll from '@/components/unit/DownloadAll.vue'
-import {HeartOutlined,DownloadOutlined,LoadingOutlined } from '@ant-design/icons-vue'
+import {HeartOutlined,DownloadOutlined } from '@ant-design/icons-vue'
 import Pop from '@/components/search/Pop.vue'
-import { getCurrentInstance, watch, reactive,ref,h,computed } from 'vue';
+import { getCurrentInstance, watch, reactive,ref,computed } from 'vue';
 import timeFormat from '@/utils/timeFormat';
 import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
-const indicator = h(LoadingOutlined, {
-  style: {
-    fontSize: '20px',
-    marginRight:'16px',
-  },
-  spin: true,
-});
+import { useRoute, useRouter } from 'vue-router';
+import MyTable from '../unit/MyTable.vue';
 const spinning = ref(true);
+const router = useRouter();
 const {proxy:{$axios}} = getCurrentInstance();
 const columns = [
   {
     dataIndex: 'number',
-    width:'16px',
+    width:'50px',
   },
   {
     dataIndex: 'like',
-    width:'16px',
+    width:'25px',
   },
   {
     dataIndex: 'download',
-    width:'16px',
+    width:'25px',
   },
   {
     title: '音乐标题',
     dataIndex: 'song',
+    width:'38%'
   },
   {
     title: '歌手',
     dataIndex: 'singer',
-    width:'20%',
+    width:'16%',
   },
   {
     title: '专辑',
     dataIndex: 'album',
+    width:'19%',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:(event) => {
+          router.push(`/album/${record.album.props.albumId}`);
+        }
+      }
+    }
   },
   {
     title: '时长',
     dataIndex: 'dt',
+    width:'8%'
   },
   {
     title: '热度',
     dataIndex: 'pop',
   },
 ];
-const customRow = (record) => {
-  return {
-    onDblclick: (event) => {
-      handlePlaySong(record.key,record.index);
-    },
-  };
-}
 const dataSource = ref([]);
 const route = useRoute();
 let current = ref(1);
@@ -93,6 +89,7 @@ const getList = async (keyword)=>{
   spinning.value = false;
   dataSource.value = [];
   songList = [];
+  pagination.total = res.result.songCount;
   const songs = res.result.songs;
   songs.forEach((item,index)=>{
     dataSource.value.push({
@@ -102,8 +99,8 @@ const getList = async (keyword)=>{
       like:<HeartOutlined/>,
       download:<DownloadOutlined/>,
       song: <div class="song">{item.name}</div>,
-      singer: <route-link data-name={item.ar[0].name}>{item.ar[0].name}</route-link>,
-      album: <div class="album">{item.al.name}</div>,
+      singer: <route-link data-name={item.ar[0].name} class="singer">{item.ar[0].name}</route-link>,
+      album: <div class="album" albumId={item.al.id}>{item.al.name}</div>,
       dt:timeFormat(item.dt),
       pop:<Pop>{item.pop}</Pop>,
       })
@@ -127,7 +124,7 @@ const handlePlaySong = (id,index)=>{
 }
 const pagination = reactive({
     pageSize:100,
-    total:300,
+    total:100,
     showSizeChanger:false,
     current,
 })

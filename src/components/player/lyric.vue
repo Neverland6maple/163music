@@ -36,7 +36,7 @@ const boxHeight = ref(0);
 const box = ref(null);
 let scrollY = 0;
 const middle = ref(-1);
-const current = computed(()=>store.state.player.current);
+const current = computed(()=>store.state.player.currentTime);
 const activeIndex = ref(0);
 const scrollH = ref(0);
 const lyricRef = ref(null);
@@ -97,6 +97,7 @@ const handleWheel = (e)=>{
     },2500);
 }
 const setScroll = (newValue)=>{
+    console.log(1);
     activeIndex.value = findActive(newValue);
     if(activeIndex.value >= 0){
         nextTick(()=>{

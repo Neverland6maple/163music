@@ -57,7 +57,7 @@
                     <a-tab-pane key="3" tab="专辑详情"></a-tab-pane>
                 </a-tabs>
             </div>
-            <myTable :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong" :spinning="spinning" v-if="activeKey === '1'"></myTable>
+            <myTable :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong" :spinning="spinning" v-if="activeKey === '1'" :pagination=false></myTable>
             <albumComment v-else-if="activeKey === '2'" :id="albumId"></albumComment>
             <albumDescription v-else-if="activeKey === '3'" :description="album.description"></albumDescription>
           </div>

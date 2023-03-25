@@ -1,7 +1,6 @@
 import { createStore } from 'vuex';
-import { Math } from 'core-js';
 import player from './player';
-
+import history from './history';
 export default createStore({
   state:{
     isSpreading:false,
@@ -25,5 +24,6 @@ export default createStore({
   },
   modules: {
     player:player,
+    history,
   }
 })
