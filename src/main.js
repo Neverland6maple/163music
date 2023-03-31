@@ -12,4 +12,4 @@ import 'ant-design-vue/dist/antd.css';
 import '@/assets/animation.css';
 import '@/assets/theme.less';
 
-createApp(App).use(store).use(router).use(Antd).use(request).mount('#app')
+createApp(App).use(request).use(router).use(store).use(Antd).mount('#app')

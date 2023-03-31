@@ -91,25 +91,16 @@
                 </li>
             </ul>
             <div id="user" v-if="!myIsSpreading">
-                <div id="userImg"><img src="@/assets/user.jpg" alt=""></div>
+                <div id="userImg" @click="toUser(profile.userId)"><img :src="profile.avatarUrl" alt="" class="coverPic"></div>
                 <a-dropdown :trigger="['click']">
                     <a class="ant-dropdown-link" @click.prevent>
-                        <span id="username" @click="toLogin">
-                            未登录
+                        <span id="username" @click="toUser(profile.userId)">
+                            {{  profile.nickname|| '未登录' }}
                         </span>
                         <DownOutlined />
                     </a>
-                    <template #overlay>
-                        <a-menu>
-                            <a-menu-item key="0">
-                            <a href="http://www.alipay.com/">1st menu item</a>
-                            </a-menu-item>
-                            <a-menu-item key="1">
-                            <a href="http://www.taobao.com/">2nd menu item</a>
-                            </a-menu-item>
-                            <a-menu-divider />
-                            <a-menu-item key="3">3rd menu item</a-menu-item>
-                        </a-menu>
+                    <template #overlay v-if="islogin">
+                        <userNav :follows="profile.follows" :followeds="profile.followeds" :eventCount="profile.eventCount"></userNav>
                     </template>
                 </a-dropdown>
             </div>
@@ -124,6 +115,7 @@ import { computed } from '@vue/reactivity';
 import { getCurrentInstance, ref,watch} from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import userNav from '@/components/UserNav.vue'
 const keyword = ref('');
 const router = useRouter();
 const store = useStore();
@@ -133,6 +125,8 @@ const isCheckAll = ref(false);
 const isSearching = ref(false);
 const subnavRef = ref(null);
 const hotItem = ref([]);
+const islogin = computed(()=>store.getters['user/islogin']);
+const profile = computed(()=>store.state.user.profile);
 let lock = false;
 const {proxy:{$axios}} = getCurrentInstance()
 const searchHistory = computed(()=>store.state.history.searchHistory);
@@ -170,8 +164,12 @@ const changeIsCheckAll = ()=>{
 const handleSpread = ()=>{
     store.commit('changeIsSpreading',false);
 }
-const toLogin = ()=>{
-    store.commit('changeLoginShow',true)
+const toUser = (userId)=>{
+    if(JSON.stringify(profile.value) === "{}"){
+        store.commit('changeLoginShow',true)
+    }else{
+        router.push(`/u/${userId}`);
+    }
 }
 const handleDelete = (index,e)=>{
     store.commit('history/deleteSearchHistory',index);
@@ -417,15 +415,13 @@ watch(isSpreading,(newValue)=>{
             #userImg{
                 height: 30px;
                 width: 30px;
-                img{
-                    display: flex;
-                    align-items: center;
-                    width: 100%;
-                    height: 100%;
-                    border-radius: 50%;
-                }
+                cursor: pointer;           
+                border-radius: 50%;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
             }
-            .ant-dropdown-trigger{
+            :deep(.ant-dropdown-trigger){
                 #username{
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -444,7 +440,9 @@ watch(isSpreading,(newValue)=>{
                 height: 100%;
                 font-size: 12px;
                 color: #ccc;
+                
             }
+            
         }
         #fn{
             float: right;

@@ -1,42 +1,40 @@
 <template>
     <div id="homepage">
-        <div class="main">
+        <!-- <div class="main">
             <Carousel :images="images"></Carousel>
-        </div>
+        </div> -->
     </div>
 </template>
-<script>
-import { defineComponent, getCurrentInstance , reactive, ref} from 'vue';
+<script setup>
+import { getCurrentInstance , ref,computed} from 'vue';
 import Carousel from '@/components/index/homepage/Carousel.vue'
-
-export default defineComponent({
-components:{
-    Carousel,
-},
-async setup(){
-    const {proxy:{$axios}} = getCurrentInstance();
-    const images = reactive([]);
-    const {data:res} = await $axios({
-        method:'get',
-        url:'/api/homepage/block/page',
-    });
-    const blocks = res.data.blocks;
-    const banners = blocks[0].extInfo.banners;
-    banners.forEach(item => {
-        images.push({
-        id:item.bannerId,
-        pic:item.pic,
-        typeTitle:item.typeTitle,
-        url:item.url,
-        song:item.song,
-        targetType:item.targetType,
-        targetId:item.targetId})
-    });
-    return {
-        images
-    }
-}
-})
+import { useStore } from 'vuex';
+const {proxy:{$axios}} = getCurrentInstance();
+const images = ref([]);
+const store = useStore();
+const islogin = computed(()=>store.getters['user/islogin']);
+const blocks = ref([]);
+const banners = ref([]);
+// const getBlocks = async ()=>{
+//     const {data:res} = await $axios({
+//         method:'get',
+//         url:`/api/homepage/block/page`,
+//     });
+//     blocks.value= res.data.blocks;
+//     banners.value = blocks.value[0].extInfo.banners;
+//     images.value = [];
+//     banners.value.forEach(item => {
+//         images.value.push({
+//         id:item.bannerId,
+//         pic:item.pic,
+//         typeTitle:item.typeTitle,
+//         url:item.url,
+//         song:item.song,
+//         targetType:item.targetType,
+//         targetId:item.targetId})
+//     });
+// }
+// getBlocks();
 
 </script>
 <style lang="less" scoped>

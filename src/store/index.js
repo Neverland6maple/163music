@@ -1,6 +1,7 @@
 import { createStore } from 'vuex';
 import player from './player';
 import history from './history';
+import user from './user';
 export default createStore({
   state:{
     isSpreading:false,
@@ -25,5 +26,6 @@ export default createStore({
   modules: {
     player:player,
     history,
+    user,
   }
 })

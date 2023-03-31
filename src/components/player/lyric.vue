@@ -97,7 +97,6 @@ const handleWheel = (e)=>{
     },2500);
 }
 const setScroll = (newValue)=>{
-    console.log(1);
     activeIndex.value = findActive(newValue);
     if(activeIndex.value >= 0){
         nextTick(()=>{

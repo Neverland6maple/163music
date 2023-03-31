@@ -6,8 +6,7 @@
 
             </div>
             <div class="QR">
-                <!-- <div class="QRcode"></div> -->
-                <img src="@/assets/QRcode.png" alt="QRcode" class="QRcode"/>
+                <img :src=qrImg alt="QRcode" class="QRcode"/>
                 <div class="loginIntro">使用<span class="blue">网易云音乐APP</span>扫码登陆</div>
             </div>
         </div>
@@ -16,7 +15,9 @@
 </template>
 <script setup>
 import {RightOutlined,} from '@ant-design/icons-vue';
-
+const props = defineProps({
+    qrImg:String,
+})
 </script>
 <style lang="less" scoped>
 #scanPre{

@@ -58,7 +58,7 @@
                 </a-tabs>
             </div>
             <myTable :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong" :spinning="spinning" v-if="activeKey === '1'" :pagination=false></myTable>
-            <albumComment v-else-if="activeKey === '2'" :id="albumId"></albumComment>
+            <albumComment v-else-if="activeKey === '2'" :id="albumId" :type=3></albumComment>
             <albumDescription v-else-if="activeKey === '3'" :description="album.description"></albumDescription>
           </div>
     </div>

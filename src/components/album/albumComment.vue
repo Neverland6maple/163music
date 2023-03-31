@@ -31,7 +31,8 @@ import TransparemtBtn from '../unit/TransparemtBtn.vue';
 import commentList from '../unit/commentList.vue';
 import { getCurrentInstance, ref } from 'vue';
 const props = defineProps({
-    id:String
+    id:String,
+    type:Number,
 })
 const value = ref('');
 const hotComment = ref([]);
@@ -45,7 +46,7 @@ const getHotList = async (id)=>{
     spinning.value = true;
     const {data:res} = await $axios({
         method:'get',
-        url:`/api/comment/new?type=3&id=${id}&pageSize=10&pageNo=1&sortType=2`,
+        url:`/api/comment/new?type=${props.type}&id=${id}&pageSize=10&pageNo=1&sortType=2`,
     })
     hotComment.value = res.data.comments.filter(e=>e.likedCount > 10);
     spinning.value = false;
@@ -54,7 +55,7 @@ const getLatestComments = async (id,pageNo)=>{
     spinning.value = true;
     const {data:res} = await $axios({
         method:'get',
-        url:`/api/comment/new?type=3&id=${id}&pageSize=30&pageNo=${pageNo}&sortType=3&cursor=${cursor.value}`,
+        url:`/api/comment/new?type=${props.type}&id=${id}&pageSize=30&pageNo=${pageNo}&sortType=3&cursor=${cursor.value}`,
     })
     latestComment.value = res.data.comments;
     total.value = res.data.totalCount;

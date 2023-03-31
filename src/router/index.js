@@ -31,6 +31,14 @@ const routes = [
     name:'Album',
     path:'/album/:albumId',
     component:()=>import('@/components/album/index.vue')
+  },{
+    name:'Playlist',
+    path:'/Playlist/:playlistId',
+    component:()=>import('@/components/playlist/index.vue')
+  },{
+    name:'User',
+    path:'/u/:userId',
+    component:()=>import('@/components/user/index.vue')
   }
 ]
 

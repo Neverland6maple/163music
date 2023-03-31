@@ -1,9 +1,10 @@
 <template>
     <div id="myTable">
-        <a-spin :indicator="indicator" tip="加载中" :spinning="props.spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
+        <a-spin :indicator="indicator" tip="加载中"  :spinning="props.spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
         <a-table
         class="albumTable"
         size="small"
+        :showHeader="showHeader"
         :columns="props.columns"
         :data-source="props.dataSource"
         :pagination=pagination
@@ -22,6 +23,14 @@ const props = defineProps({
     dataSource:Array,
     spinning:Boolean,
     pagination:Object || Boolean,
+    showHeader:{
+      type:Boolean,
+      default:true,
+    },
+    id:{
+      type:Number,
+      required:false
+    },
 });
 const emit = defineEmits(['handlePlaySong','handleTableChange'])
 const indicator = h(LoadingOutlined, {
@@ -34,12 +43,17 @@ const indicator = h(LoadingOutlined, {
 const customRow = (record) => {
   return {
     onDblclick: (event) => {
-      handlePlaySong(record.key,record.index);
+      console.log(typeof props.id);
+      if(typeof props.id === 'number'){
+        handlePlaySong(record.key,record.index,props.id);
+      }else{
+        handlePlaySong(record.key,record.index);
+      }
     },
   };
 }
-const handlePlaySong = (id,index)=>{
-    emit('handlePlaySong',id,index);
+const handlePlaySong = (songId,index,id)=>{
+    emit('handlePlaySong',songId,index,id);
 }
 const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>{
    emit('handleTableChange',pagination,filters,sorter,{ currentDataSource });
@@ -61,14 +75,37 @@ const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>
               text-overflow: ellipsis;
               white-space: nowrap;
               cursor: pointer;
+              color: #999;
+              &:hover{
+                color: #b1b9b9;
+              }
+            }
+            .slash{
+              margin: 0 4px;
             }
             .song{
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+              display: flex;
+              align-items: center;
+              justify-content:left;
+              .vipIcon,mvIcon,noCopyrightIcon{
+                margin-left: 1px;
+              }
             }
             .singer{
               cursor: pointer;
+              color: #999;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              .singerName:hover{
+                color: #b1b9b9;
+              }
+            }
+            .dt{
+              color: #999;
             }
             .ant-table-cell{
                 background-color: transparent;

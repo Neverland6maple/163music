@@ -13,7 +13,7 @@
               <router-view></router-view>
           </Suspense>
         </a-layout-content>
-        <Login v-if="loginShow"></Login>
+        <Suspense><Login v-if="loginShow"></Login></Suspense>
         <PlayerPage></PlayerPage>
         <SongList v-if="slider === 1"></SongList>
       </a-layout>

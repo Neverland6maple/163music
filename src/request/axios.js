@@ -79,7 +79,8 @@ const $get = (url, params) => {
  * @param {String} url [请求的url地址] 
  * @param {Object} params [请求时携带的参数] 
  */
-const $post = (url, params) => {
+const $post = (url, params = {}) => {
+	if(!params.cookie) params.cookie = localStorage.getItem('cookie');
 		return new Promise((resolve, reject) => {
 			axios.post(url, QS.stringify(params)) //是将对象 序列化成URL的形式，以&进行拼接   
 				.then(res => {

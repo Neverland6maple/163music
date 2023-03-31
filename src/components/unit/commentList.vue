@@ -102,7 +102,6 @@ const handlePageChange = (newPage)=>{
             height: 34px;
             border-radius: 50%;
             margin: 0px 14px;
-            background-color: yellow;
             overflow: hidden;
         }
         .commentBody{

@@ -15,59 +15,76 @@
       <a-menu-item key="6">私人FM</a-menu-item>
 
       <a-menu-item-group key="g2" title="我的音乐">
-        <a-menu-item key="7"><router-link to="/likes"><heart-outlined class="sliderIcon"/>我很喜欢的音乐</router-link></a-menu-item>
+        <a-menu-item key="7" @click="toPlaylist(item.id)"><heart-outlined class="sliderIcon"/>我喜欢的音乐</a-menu-item>
         <a-menu-item key="9"><download-outlined class="sliderIcon"/>本地与下载</a-menu-item>
         <a-menu-item key="10"><field-time-outlined class="sliderIcon"/>最近播放</a-menu-item>
-        <a-menu-item key="11"><cloud-outlined class="sliderIcon"/>我的音乐云盘</a-menu-item>
-        <a-menu-item key="12"><logout-outlined class="sliderIcon"/>我的博客</a-menu-item>
-        <a-menu-item key="13"><user-add-outlined class="sliderIcon"/>我的收藏</a-menu-item>
+        <a-menu-item key="11" v-if="islogin"><cloud-outlined class="sliderIcon"/>我的音乐云盘</a-menu-item>
+        <a-menu-item key="12" v-if="islogin"><logout-outlined class="sliderIcon"/>我的博客</a-menu-item>
+        <a-menu-item key="13" v-if="islogin"><user-add-outlined class="sliderIcon"/>我的收藏</a-menu-item>
       </a-menu-item-group>
 
       <a-sub-menu key="sub1" @titleClick="titleClick">
         <template #title>创建的歌单</template>
-        <a-menu-item key="14">ye</a-menu-item>
+        <a-menu-item v-for="(item) in userCreators" :key="item.id" @click="toPlaylist(item.id)">{{item.name}}</a-menu-item>
       </a-sub-menu>
 
-      <a-sub-menu key="sub2" @titleClick="titleClick">
+      <a-sub-menu key="sub2" @titleClick="titleClick" v-if="islogin">
         <template #title>收藏的歌单</template>
-        <a-menu-item key="15">Option 5</a-menu-item>
+        <a-menu-item v-for="(item) in userCollections" :key="item.id" @click="toPlaylist(item.id)">{{ item.name }}</a-menu-item>
       </a-sub-menu>
 
     </a-menu>
   </template>
-  <script>
-  import { defineComponent, ref, watch } from 'vue';
-  import { HeartOutlined,DownloadOutlined,FieldTimeOutlined,CloudOutlined,LogoutOutlined,UserAddOutlined } from '@ant-design/icons-vue';
-  export default defineComponent({
-    components: {
-      HeartOutlined,
-      DownloadOutlined,
-      FieldTimeOutlined,
-      CloudOutlined,
-      LogoutOutlined,
-      UserAddOutlined,
-    },
-    setup() {
-      const selectedKeys = ref(['1']);
-      const openKeys = ref(['sub1']);
-      const handleClick = e => {
-        console.log('click', e);
-      };
-      const titleClick = e => {
-        console.log('titleClick', e);
-      };
-      watch(() => openKeys, val => {
-        console.log('openKeys', val);
-      });
-      return {
-        selectedKeys,
-        openKeys,
-        handleClick,
-        titleClick,
-      };
-    },
-  });
-  </script>
+<script setup>
+import { getCurrentInstance, ref, watch, watchEffect } from 'vue';
+import { HeartOutlined,DownloadOutlined,FieldTimeOutlined,CloudOutlined,LogoutOutlined,UserAddOutlined } from '@ant-design/icons-vue';
+import { computed } from '@vue/reactivity';
+import store from '@/store';
+import { useRouter } from 'vue-router';
+const selectedKeys = ref(['1']);
+const openKeys = ref(['sub1']);
+const {proxy:{$axios,$post}} = getCurrentInstance();
+const profile = computed(()=>store.state.user.profile);
+const islogin = computed(()=>store.getters['user/islogin']);
+const myLikes = ref({});
+const router = useRouter();
+const userCreators = ref([]);
+const userCollections = ref([]);
+const handleClick = e => {
+  // console.log('click', e);
+};
+const titleClick = e => {
+  // console.log('titleClick', e);
+};
+const toPlaylist = (id)=>{
+  router.push(`/playlist/${id}`)
+}
+const getPlaylist = async ()=>{
+    const {data:res} = await $axios({
+      method:'get',
+      url:`/api/user/playlist?uid=${profile.value.userId}`
+    })
+    const playlist = res.playlist;
+    myLikes.value = playlist[0];
+    for(let i = 1;i<playlist.length;i++){
+      if(playlist[i].creator.userId === profile.value.userId){
+        userCreators.value.push(playlist[i]);
+      }else{
+        userCollections.value.push(playlist[i]);
+      }
+    }
+};
+watch(islogin,(newVal)=>{
+  if(newVal){
+    getPlaylist();
+  }
+},{
+  immediate:true,
+})
+watch(() => openKeys, val => {
+  console.log('openKeys', val);
+});
+</script>
 
 <style lang="less" scoped>
 .sliderIcon{
