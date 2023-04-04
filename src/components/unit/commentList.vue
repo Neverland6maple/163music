@@ -2,10 +2,46 @@
     <div id="commentList">
         <a-spin :indicator="indicator" tip="加载中" :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
         <template v-if="!spinning">
-            <div id="hotComment" v-if="hotComment.length > 0 && current === 1">
-                <h3 class="title">精彩评论</h3>
+            <div id="hotComments" v-if="hotComments.length > 0 && current === 1">
+                <h3 class="title">精彩评论({{ total }})</h3>
                 <div class="commentList">
-                    <div class="commentItem" v-for="(item) in hotComment" :key="item.commentId">
+                    <div class="commentItem" v-for="(item) in partHotComments" :key="item.commentId">
+                        <div class="userPic">
+                            <img :src="item.user.avatarUrl" alt="" class="picImg">
+                        </div>
+                        <div class="commentBody">
+                            <div class="comment">
+                                <div class="username">
+                                    {{ item.user.nickname }}
+                                    <img :src="item.user.vipRights.associator ? item.user.vipRights.associator. iconUrl : (item.user.vipRights.musicPackage ? item.user.vipRights.musicPackage.  iconUrl : '')" alt="" v-if="item.user.vipRights && (item.user.vipRights.  associator || item.user.vipRights.musicPackage)" class="vipPic">
+                                </div>
+                                :
+                                {{ item.content }}
+                            </div>
+                            <div class="commentTime">
+                                {{ dateFormat(item.time,true) + ' ' + item.timeStr}}
+                            </div>
+                        </div>
+                        <div class="commentOther">
+                            <span class="anticon">举报</span>
+                            <span class="anticon"><LikeOutlined />{{ item.likedCount === 0 ? '' : item.likedCount }}    </span>
+                            <ShareAltOutlined />
+                            <CommentOutlined />
+                        </div>
+                    </div>
+                </div>
+                <div class="toMoreHot">
+                    <TransparemtBtn>
+                        <template #content>
+                            更多精彩评论
+                        </template>
+                    </TransparemtBtn>
+                </div>
+            </div>
+            <div id="latestComments">
+                <h3 class="title">最新评论({{ total }})</h3>
+                <div class="commentList">
+                    <div class="commentItem" v-for="(item) in latestComments" :key="item.commentId">
                         <div class="userPic">
                             <img :src="item.user.avatarUrl" alt="" class="picImg">
                         </div>
@@ -31,72 +67,60 @@
                     </div>
                 </div>
             </div>
-            <div id="latestComment">
-                <h3 class="title">最新评论</h3>
-                <div class="commentList">
-                    <div class="commentItem" v-for="(item) in latestComment" :key="item.commentId">
-                        <div class="userPic">
-                            <img :src="item.user.avatarUrl" alt="" class="picImg">
-                        </div>
-                        <div class="commentBody">
-                            <div class="comment">
-                                <div class="username">
-                                    {{ item.user.nickname }}
-                                    <img :src="item.user.vipRights.associator ? item.user.vipRights.associator. iconUrl : (item.user.vipRights.musicPackage ? item.user.vipRights.musicPackage.  iconUrl : '')" alt="" v-if="item.user.vipRights && (item.user.vipRights.  associator || item.user.vipRights.musicPackage)" class="vipPic">
-                                </div>
-                                :
-                                {{ item.content }}
-                            </div>
-                            <div class="commentTime">
-                                {{ dateFormat(item.time,true) + ' ' + item.timeStr}}
-                            </div>
-                        </div>
-                        <div class="commentOther">
-                            <span class="anticon">举报</span>
-                            <span class="anticon"><LikeOutlined />{{ item.likedCount === 0 ? '' : item.likedCount }}    </span>
-                            <ShareAltOutlined />
-                            <CommentOutlined />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <a-pagination v-model:current="current" :total="50" show-less-items @change="handlePageChange"/>
+            <a-pagination v-model:current="current" :total="total" @change="handlePageChange" :showSizeChanger="false" />
         </template>
     </div>
 </template>
 <script setup>
-import { ref } from 'vue';
+import { ref , computed} from 'vue';
 import dateFormat from '@/utils/dateFormat';
+import TransparemtBtn from './TransparemtBtn.vue';
 import {LikeOutlined , ShareAltOutlined , CommentOutlined ,} from '@ant-design/icons-vue'
 const props = defineProps({
-    hotComment:Array,
-    latestComment:Array,
+    hotComments:Array,
+    latestComments:Array,
     spinning:Boolean,
     total:Number,
 })
 const current = ref(1);
 const emit = defineEmits(['handlePageChange','change']);
+const partHotComments = computed(()=>props.hotComments.slice(0,10))
 const handlePageChange = (newPage)=>{
     emit('handlePageChange',newPage);
 }
+const reset = ()=>{
+    current.value = 1;
+}
+defineExpose({
+    reset,
+})
 </script>
 <style scoped lang="less">
-
+@import '@/assets/theme.less';
 #commentList{
     width: 100%;
+    #hotComments{
+        margin-bottom: 10px;
+        .toMoreHot{
+            display: flex;
+            place-content: center center;
+        }
+    }
+    
     .commentItem{
         width: 100%;
         display: flex;
         align-items: flex-start;
         position: relative;
         min-height: 48px;
-        padding-top: 15px;
+        padding-top: 0px;
         margin-bottom: 15px;
+        padding-bottom: 15px;
         text-align: left;
-        border-top: solid 1px #363636;
-        &:first-child{
-            border-top: 0;
-        }
+        border-bottom: solid 1px #363636;
+        // &:first-child{
+        //     border-top: 0;
+        // }
         .userPic{
             width: 34px;
             height: 34px;
@@ -110,9 +134,9 @@ const handlePageChange = (newPage)=>{
         .commentOther{
             position: absolute;
             right: 0;
-            bottom: 0;
-            height: 10px;
+            bottom: 12px;
             font-size: 13px;
+            color: @black-font-color;
             > .anticon{
                 padding: 0 10px;
                 border-right: solid 1px #555;
@@ -148,8 +172,8 @@ const handlePageChange = (newPage)=>{
             line-height: 20px;
         }
         .vipPic{
-            width: 40px;
             height: 14px;
+            margin-left: 4px;
         }
         &:hover{
             .commentOther :first-child{
@@ -202,5 +226,6 @@ const handlePageChange = (newPage)=>{
     color: #d5d5d5;
     font-weight: bold;
     font-size: 14px;
+    line-height: 40px;
 }
 </style>

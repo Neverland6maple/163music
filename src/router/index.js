@@ -7,11 +7,7 @@ const routes = [
     children:[{
       path:'',
       component:()=>import('@/components/index/homepage/Homepage.vue')
-    },{
-      path:'test',
-      component:()=>import('@/components/test.vue')
-    }]
-    
+    },]
   },{
     name:'Likes',
     path:'/likes',
@@ -23,9 +19,6 @@ const routes = [
     children:[{
       path:'',
       component:()=>import('@/components/search/SongPage.vue')
-    },{
-      path:'singer',
-      component:()=>import('@/components/test2.vue')
     },]
   },{
     name:'Album',
@@ -39,6 +32,10 @@ const routes = [
     name:'User',
     path:'/u/:userId',
     component:()=>import('@/components/user/index.vue')
+  },{
+    name:'Artist',
+    path:'/artist/:artistId',
+    component:()=>import('@/components/ar/index.vue')
   }
 ]
 

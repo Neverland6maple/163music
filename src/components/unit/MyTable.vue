@@ -43,7 +43,6 @@ const indicator = h(LoadingOutlined, {
 const customRow = (record) => {
   return {
     onDblclick: (event) => {
-      console.log(typeof props.id);
       if(typeof props.id === 'number'){
         handlePlaySong(record.key,record.index,props.id);
       }else{
@@ -67,9 +66,12 @@ const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>
             background-color: transparent;
         }
         :deep(.ant-table-content){
-          table{
-            table-layout: fixed !important;
-          }
+            table{
+              table-layout: fixed !important;
+            }
+            .slash{
+              margin: 0 4px;
+            }
             .album{
               overflow: hidden;
               text-overflow: ellipsis;
@@ -79,10 +81,7 @@ const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>
               &:hover{
                 color: #b1b9b9;
               }
-            }
-            .slash{
-              margin: 0 4px;
-            }
+            } 
             .song{
               overflow: hidden;
               text-overflow: ellipsis;
@@ -100,6 +99,9 @@ const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+              .singerName{
+                transition: none;
+              }
               .singerName:hover{
                 color: #b1b9b9;
               }

@@ -15,7 +15,7 @@
                             <div>歌手:
                                 <template v-for="(item,index) in songInfo.ar" :key="item.id">
                                     {{ index !== 0 ? ' /'  : ' '}}
-                                    <router-link to="/">{{ item.name }}</router-link>
+                                    <a @click="toAr(item.id)">{{ item.name }}</a>
                                 </template>
                             </div>
                             <div>专辑:{{ songInfo?.al?.name }}</div>
@@ -27,30 +27,61 @@
                     </div>
                 </div>
             </div>
-            <div class="lowerLevel"></div>
+            <div class="lowerLevel">
+                <div class="commentBox">
+                    <commentList :total="total" :spinning="spinning" :hotComments="hotComments" :latestComments="latestComments" @handlePageChange="handlePageChange" ref="commentListRef"></commentList>
+                </div>
+                <div class="sideBar">
+                    123
+                </div>
+            </div>
         </div>
     </div>
 </template>
-<script>
+<script setup>
 import {useStore} from 'vuex'
+import router from '@/router';
 import { computed } from '@vue/reactivity'
-import { defineComponent } from 'vue';
+import { defineComponent, getCurrentInstance,watch,ref, onMounted } from 'vue';
 import lyricComponent from '@/components/player/lyric.vue'
-export default defineComponent({
-    components:{
-        lyricComponent
-    },
-    setup(){
-    const store = useStore();
-    const isSpreading = computed(()=>store.state.isSpreading);
-    const isPlaying = computed(()=>store.state.player.isPlaying);
-    const songInfo = computed(()=>store.state.player.songInfo);
-    return {
-      isSpreading,
-      songInfo,
-      isPlaying,
-    }
-  }
+import commentList from './unit/commentList.vue';
+const store = useStore();
+const time = ref(0);
+const spinning = ref(false);
+const hotComments = ref([]);
+const latestComments = ref([]);
+const total = ref(0);
+const commentListRef = ref(null);
+const {proxy:{$axios}} = getCurrentInstance();
+const isSpreading = computed(()=>store.state.isSpreading);
+const isPlaying = computed(()=>store.state.player.isPlaying);
+const songInfo = computed(()=>store.state.player.songInfo);
+const getList = async (id,before,current)=>{
+    spinning.value = true;
+    const {data:res} = await $axios({
+        method:'get',
+        url: `/api//comment/music?id=${id}&limit=20&offset=${20*(current-1)}&before=${before}`
+    })
+    if(res.hotComments) hotComments.value = res.hotComments;
+    latestComments.value = res.comments;
+    total.value = res.total;
+    // time.val = latestComments.value[latestComments.value.length-1].time;
+    spinning.value = false;
+}
+const toAr = (id)=>{
+    router.push(`/artist/${id}`);
+    store.commit('changeIsSpreading',false);
+}
+const handlePageChange = (page)=>{
+    console.log(page);
+    getList(songInfo.value.id,time.value,page);
+}
+watch(()=>songInfo.value,(val)=>{
+    if(commentListRef.value) commentListRef.value.reset();
+    getList(val.id,time.value,1);
+},{
+    immediate:true,
+    deep:true,
 })
 </script>
 <style lang="less" scoped>
@@ -65,6 +96,7 @@ export default defineComponent({
   background-color: #2b2b2b;
   transform: translateY(100%);
   transition: all 0.3s linear;
+  overflow: auto;
   &.reverse{
     transform:translateY(0);
   }
@@ -78,6 +110,7 @@ export default defineComponent({
         justify-content: space-between;
         align-items: flex-end;
         height: 422px;
+        margin-bottom: 74px;
         #gramophone{
             width: 480px;
             height: 100%;
@@ -145,7 +178,19 @@ export default defineComponent({
         }
     }
     .lowerLevel{
-
+        width: 100%;
+        margin: 0 auto;
+        height: 100px;
+        display: flex;
+        justify-content: space-around;
+        .commentBox{
+            width: 560px;
+            height: 100%;
+        }
+        .sideBar{
+            flex: 1;
+            margin-left: 60px;
+        }
     }
     }
 }

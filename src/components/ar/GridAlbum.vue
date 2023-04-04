@@ -1,58 +1,59 @@
 <template>
-    <div id="gridPlaylist">
+    <div id="GridAlbum">
         <div v-if="type == 0" class="gridContent">
-            <div class="gridBox" v-for="(item) in playlist" :key="item.id">
+            <div class="gridBox" v-for="(item) in albums" :key="item.id">
                 <div class="cover">
-                    <img class="coverPic" :src="item.coverImgUrl" alt="">
+                    <img class="coverPic" :src="item.blurPicUrl" alt="">
                     <PlayCircleFilled />
                 </div>
                 <h3 class="title">{{ item.name }}</h3>
-                <div class="count">{{item.trackCount}}首</div>
+                <div class="publishTime">{{ dateFormat(item.publishTime) }}</div>
             </div>
         </div>
         <div v-else-if="type == 1" class="rowContent">
-            <div class="row" v-for="(item) in playlist" :key="item.id">
+            <div class="row" v-for="(item) in albums" :key="item.id">
                 <div class="cover">
-                    <img class="coverPic" :src="item.coverImgUrl" alt="">
+                    <img class="coverPic" :src="item.blurPicUrl" alt="">
                 </div>
                 <h3 class="title">{{ item.name }}</h3>
-                <div class="count">歌曲：{{item.trackCount}}首</div>
-                <div class="creator">by<span class="creatorName">{{ item.creator.nickname }}</span></div>
-                <div class="subscribed"><FolderAddOutlined />{{ item.subscribedCount }}</div>
-                <div class="playCount"><PlayCircleOutlined />{{ item.playCount }}</div>
+                <div class="count">{{item.size}}首</div>
+                <div class="publishTime">发行时间：{{ dateFormat(item.publishTime) }}</div>
             </div>
         </div>
         <div v-else-if="type == 2" class="graphContent">
-            <div  v-show="!refresh">
-                <div class="graphBox" v-for="(item,index) in graphPlaylist" :key="item.id">
-                    <div class="cover">
-                        <img class="coverPic" :src="item.coverImgUrl" alt="">
+            <div >
+                <div class="graphBox" v-for="(item,index) in albums" :key="item.id">
+                    <div class="albumInfo">
+                        <div class="cover">
+                            <img class="coverPic" :src="item.blurPicUrl" alt="">
+                        </div>
+                        <div class="publishTime">{{ dateFormat(item.publishTime) }}</div>
                     </div>
                     <div class="list">
-                        <h2 class="title">{{  item.name }}</h2>
+                        <h2 class="title">{{ item.name }}</h2>
                         <div class="listTable">
                             <MyTable :columns="columns" :data-source="dataSource[index]" :pagination="false" :spinning="spinning[index]" @handlePlaySong="handlePlaySong" :showHeader="false" :id="item.id"></MyTable>
                         </div>
-                        <div class="total"><router-link to="/" class="toComplete">查看全部{{umap.get(item.id)}}首<RightOutlined /></router-link></div>
+                        <div class="total" v-if="item.size > 10"><router-link to="/" class="toComplete">查看全部{{item.size}}首<RightOutlined /></router-link></div>
                     </div>
                 </div>
-                <a-pagination v-model:current="current" :total="playlist.length" :pageSize="pagesize" show-less-items @change="handlePageChange" :showSizeChanger="false"/>
             </div>
             
         </div>
     </div>
 </template>
 <script setup>
-import {PlayCircleFilled,FolderAddOutlined,PlayCircleOutlined,RightOutlined,DownloadOutlined,HeartOutlined} from '@ant-design/icons-vue';
+import {PlayCircleFilled,RightOutlined,DownloadOutlined,HeartOutlined} from '@ant-design/icons-vue';
 import MyTable from '../unit/MyTable.vue';
-import {getCurrentInstance, ref, watchEffect,computed, reactive} from 'vue';
+import {getCurrentInstance, ref, watchEffect, reactive, watch} from 'vue';
 import timeFormat from '@/utils/timeFormat';
 import mvIcon from '@/components/icon/mv.vue'
 import vipIcon from '@/components/icon/vip.vue'
 import noCopyright from '../icon/noCopyright.vue';
+import dateFormat from '@/utils/dateFormat';
 import { useStore } from 'vuex';
 const props = defineProps({
-    playlist:Array,
+    albums:Array,
     type:Number
 })
 const columns = [
@@ -79,25 +80,16 @@ const columns = [
   },
 ];
 const store = useStore();
-const pagesize = ref(20);
-const current = ref(1);
-const spinning = reactive(new Array(pagesize.value).fill(false));
-const refresh  = ref(false);
+const spinning = reactive([]);
 const dataSource = ref([]);
-// const songs = ref([]);
 const {proxy:{$axios}} = getCurrentInstance();
-const graphPlaylist = computed(()=>{
-    return props.playlist.slice((current.value-1)*pagesize.value,current.value*pagesize.value);
-})
-const umap = reactive(new Map());
 const getList = async (id,ind)=>{
   spinning[ind] = true;
   const {data:res} = await $axios({
     method:'get',
-    url:`/api/playlist/detail?id=${id}`,
+    url:`/api/album?id=${id}`,
   });
-  const songs = res.playlist.tracks;
-  umap.set(id,res.playlist.trackIds.length)
+  const songs = res.songs;
   dataSource.value[ind] = [];
   for(let i = 0;i<songs.length && i<10;i++){
     const item = songs[i];
@@ -115,10 +107,9 @@ const getList = async (id,ind)=>{
   spinning[ind] = false;
 }
 const handlePlaySong = async (songId,index,id)=>{
-    const len = umap.get(id) > 1000 ? 1000 : umap.get(id);
     const {data:res} = await $axios({
         method:'get',
-        url:`/api/playlist/track/all?id=${id}&limit=${len}`
+        url:`/api/album?id=${id}`
     });
     const songList = [];
     const songs = res.songs;
@@ -126,7 +117,7 @@ const handlePlaySong = async (songId,index,id)=>{
         songList.push({
             id:item.id,
             name:item.name,
-            singer:item.ar[0].name,
+            singer:item.ar,
             dt:timeFormat(item.dt),
             fee:item.fee,
             noCopyrightRcmd:item.noCopyrightRcmd,
@@ -139,26 +130,20 @@ const handlePlaySong = async (songId,index,id)=>{
     store.dispatch('player/changeSong',songId);
     store.commit('player/clearHistoryList',index);
 }
-const handlePageChange = (newPage)=>{
-    refresh.value = true;
-    for(let i = 0;i<pagesize.value && (i+(newPage-1)*pagesize.value) < props.playlist.length;i++){
-        getList(props.playlist[i+(newPage-1)*pagesize.value].id,i);
+watch(()=>props.albums,val=>{
+    const len = spinning.length;
+    spinning.splice(len,0,...new Array(val.length-len).fill(false));
+    for(let i = len;i < props.albums.length;i++){
+        getList(props.albums[i].id,i);
     }
-    setTimeout(()=>{
-        refresh.value = false
-    },0)
-}
-watchEffect(()=>{
-    if(props.playlist){
-        for(let i = 0;i<pagesize.value && i < props.playlist.length;i++){
-            getList(props.playlist[i].id,i);
-        }
-    }
+},{
+    immediate:true,
+    deep:true,
 })
 </script>
 <style scoped lang="less">
 @import '@/assets/theme.less';
-#gridPlaylist{
+#GridAlbum{
     margin-bottom: 50px;
     .gridContent{
         padding-left: 28px;
@@ -176,6 +161,7 @@ watchEffect(()=>{
                 height: auto;
                 object-fit: contain;
                 position: relative;
+                margin-bottom: 6px;
                 .anticon{
                     position: absolute;
                     background-color: #ec4141;
@@ -194,9 +180,15 @@ watchEffect(()=>{
             }
             .title{
                 color: @black-font-color;
-                line-height: 30px;
+                line-height: 22px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                margin-bottom: 6px;
             }
-            .count{
+            .publishTime{
                 font-size: 12px;
                 color:#6b6b6b;
             }
@@ -233,39 +225,13 @@ watchEffect(()=>{
             }
             .count{
                 min-width: 120px;
-                width: 14%;
+                width: 30%;
                 padding-right: 12px;
             }
-            .creator{
-                min-width: 120px;
-                width: 14%;
-                padding-right: 12px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                .creatorName{
-                    margin-left: 5px;
-                }
-            }
-            .subscribed{
-                min-width: 100px;
-                width: 10%;
+            .publishTime{
+                width: 20%;
                 display: flex;
                 align-items: center;
-                .anticon{
-                    padding-right: 8px;
-                    font-size: 18px;
-                }
-            }
-            .playCount{
-                min-width: 80px;
-                width: 10%;
-                display: flex;
-                align-items: center;
-                .anticon{
-                    padding-right: 8px;
-                    font-size: 18px;
-                }
             }
         }
     }
@@ -276,13 +242,23 @@ watchEffect(()=>{
             width: 100%;
             display: flex;
             margin-bottom: 56px;
-            .cover{
-                width: 166px;
-                height: 166px;
-                border-radius: 6px;
-                overflow: hidden;
-                margin-right: 64px;
+            .albumInfo{
+                position: relative;
+                .cover{
+                    width: 166px;
+                    height: 166px;
+                    border-radius: 6px;
+                    margin-right: 64px;
+                }
+                
+                .publishTime{
+                    text-align: left;
+                    color: @black-font-color;
+                    font-size: 12px;
+                    line-height: 20px;
+                }
             }
+            
             .list{
                 flex: 1;
                 .title{

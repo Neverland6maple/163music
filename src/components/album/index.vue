@@ -77,6 +77,9 @@ import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import nameFormat from '@/utils/nameFormat';
 import dateFormat from '@/utils/dateFormat';
+import mvIcon from '@/components/icon/mv.vue'
+import vipIcon from '@/components/icon/vip.vue'
+import noCopyright from '../icon/noCopyright.vue';
 const spinning = ref(false);
 const {proxy:{$axios}} = getCurrentInstance();
 const columns = [
@@ -101,6 +104,16 @@ const columns = [
     title: '歌手',
     dataIndex: 'singer',
     width:'16%',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:(event) => {
+          const singerId = event.target.dataset.singerid
+          if(singerId){
+            router.push(`/artist/${event.target.dataset.singerid}`)
+          }
+        }
+      }
+    }
   },
   {
     title: '专辑',
@@ -154,24 +167,34 @@ const getList = async (id)=>{
   album.value = res.album;
   dynamic.value = res1;
   songs.value.forEach((item,index)=>{
+    const content = []
+    item.ar.forEach((el,index)=>{
+      if(index > 0){
+        content.push(<span class="slash">/</span>);
+      }
+      content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
+    });
     dataSource.value.push({
       key: item.id,
       index,
       number:index+1,
       like:<HeartOutlined/>,
       download:<DownloadOutlined/>,
-      song: <div class="song">{item.name}</div>,
-      singer: <route-link data-name={item.ar[0].name}>{item.ar[0].name}</route-link>,
+      song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+      singer: <div class="singer">{content}</div>,
       album: <div class="album" albumId={item.al.id}>{item.al.name}</div>,
       dt:timeFormat(item.dt),
       pop:<Pop>{item.pop}</Pop>,
-      })
-      songList.push({
-        id:item.id,
-        name:item.name,
-        singer:item.ar[0].name,
-        dt:timeFormat(item.dt),
-      })
+    })
+    songList.push({
+      id:item.id,
+      name:item.name,
+      singer:item.ar,
+      dt:timeFormat(item.dt),
+      fee:item.fee,
+      noCopyrightRcmd:item.noCopyrightRcmd,
+      mv:item.mv,
+    })
   })
   spinning.value = false;
 }

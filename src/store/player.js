@@ -12,6 +12,9 @@ export default {
       ar:[],
       al:{},
       lyric:[],
+      fee:{},
+      noCopyrightRcmd:{},
+      mv:'',
     },
     songList:JSON.parse(localStorage.getItem('songList')) || [],
     historyList:JSON.parse(localStorage.getItem('historyList')) || [],
@@ -35,6 +38,9 @@ export default {
       state.songInfo.ar = obj.ar;
       state.songInfo.al = obj.al;
       state.songInfo.lyric = obj.lyric;
+      state.songInfo.fee = obj.fee,
+      state.songInfo.mv = obj.mv,
+      state.songInfo.noCopyrightRcmd = obj.noCopyrightRcmd,
       localStorage.setItem('songInfo',JSON.stringify(state.songInfo));
     },
     setCurrentTime(state,value){
@@ -95,6 +101,9 @@ export default {
         ar :songRes.songs[0].ar,
         al :songRes.songs[0].al,
         lyric:[lyricRes.lrc.lyric,lyricRes?.tlyric?.lyric ?? null],
+        fee:songRes.privileges[0].fee,
+        mv:songRes.songs[0].mv,
+        noCopyrightRcmd:songRes.songs[0].noCopyrightRcmd,
       }
       store.commit('changeSongInfo',obj);
     },

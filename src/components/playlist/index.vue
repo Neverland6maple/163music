@@ -127,10 +127,13 @@ const columns = [
     title: '歌手',
     dataIndex: 'singer',
     width:'16%',
-    customCell:(recod,rowIndex) => {
+    customCell : (record,rowIndex) => {
       return {
-        onClick:(event)=>{
-          console.log(recod.singer.props.singerId);
+        onClick:(event) => {
+          const singerId = event.target.dataset.singerid
+          if(singerId){
+            router.push(`/artist/${event.target.dataset.singerid}`)
+          }
         }
       }
     }
@@ -194,7 +197,7 @@ const getList = async (id)=>{
       if(index > 0){
         content.push(<span class="slash">/</span>);
       }
-        content.push(<router-link to='/' class='singerName'>{el.name}</router-link>);
+      content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
     });
     dataSource.value.push({
       key: item.id,
@@ -213,6 +216,9 @@ const getList = async (id)=>{
         name:item.name,
         singer:item.ar[0].name,
         dt:timeFormat(item.dt),
+        fee:item.fee,
+        noCopyrightRcmd:item.noCopyrightRcmd,
+        mv:item.mv,
       })
   })
   spinning.value = false;

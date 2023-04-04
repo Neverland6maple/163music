@@ -18,8 +18,8 @@
           <div class="songInfo">
             <div class="songName">
               <div class="name">{{ songInfo.name }}</div>
-              <div class="privilege">2</div>
-              <div class="like">3</div>
+              <div class="privilege"><vipIcon :style="{'display':songInfo.fee === 1 ? '' : 'none'}" /></div>
+              <div class="like"><HeartOutlined /></div>
             </div>
             <div class="songSinger">
               <template v-for="(item,index) in songInfo.ar" :key="item.id">
@@ -89,6 +89,7 @@ import { computed, defineComponent, nextTick, onMounted, ref, watch } from 'vue'
 import {useStore} from 'vuex'
 import {PlayCircleFilled,AlignLeftOutlined,StepBackwardOutlined,StepForwardOutlined,PauseCircleFilled,CustomerServiceOutlined,FilterOutlined,TeamOutlined,MenuUnfoldOutlined,UpOutlined,DownOutlined,HeartOutlined,FolderAddOutlined,DownloadOutlined,ShareAltOutlined,RetweetOutlined,LoginOutlined,QuestionCircleOutlined,AudioMutedOutlined,} from '@ant-design/icons-vue'
 import timeFormat from '@/utils/timeFormat';
+import vipIcon from './icon/vip.vue';
 export default defineComponent({
   components:{
     PlayCircleFilled,
@@ -110,6 +111,7 @@ export default defineComponent({
     LoginOutlined,
     QuestionCircleOutlined,
     AudioMutedOutlined,
+    vipIcon,
   },
   props:{
     skipTime:{
@@ -227,7 +229,6 @@ export default defineComponent({
     let startY;
     const handleMouseDown = (e)=>{
       startY = e.clientY;
-      console.log('down');
       window.addEventListener('mousemove',handleMouseMove);
       window.addEventListener('mouseup',handleMouseUp);
       isHover.value = true;
@@ -399,12 +400,20 @@ export default defineComponent({
       margin-left: 12px;
       .songName{
         display: flex;
-        justify-content: space-between;
+        place-content: space-between center;
         line-height: 16px;
         font-size: 16px;
         margin-bottom: 6px;
-        div{
-          margin-right: 8px;
+        .privilege{
+          margin-left: 2px;
+        }
+        .like{
+          margin-left: 6px;
+          .anticon{
+            color: #666;
+            font-size: 16px;
+            cursor: pointer;
+          }
         }
       }
       .songSinger{

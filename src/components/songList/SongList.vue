@@ -1,5 +1,5 @@
 <template>
-    <div id="songList">
+    <div id="songList" ref="songListRef">
         <div class="songListHeader">
             <h2 class="songListHeaderTitle">当前播放</h2>
             <div class="songListInfo">
@@ -8,7 +8,7 @@
                 <div class="songListClear">清空列表</div>
             </div>
         </div>
-        <div class="songListContent" ref="songListRef">
+        <div class="songListContent" ref="songListContentRef">
             <a-table
             class="songListTable"
             size="small"
@@ -23,12 +23,15 @@
 </template>
 <script setup>
 import {FolderAddOutlined,LinkOutlined} from '@ant-design/icons-vue'
-import { getCurrentInstance, watch, reactive,ref,h, computed, onMounted } from 'vue';
+import { getCurrentInstance, watch, reactive,ref,h, computed, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
+import mvIcon from '@/components/icon/mv.vue'
+import vipIcon from '@/components/icon/vip.vue'
+import noCopyright from '../icon/noCopyright.vue';
 const {proxy:{$axios}} = getCurrentInstance();
 const columns = [
   {
-    dataIndex: 'name',
+    dataIndex: 'song',
   },
   {
     dataIndex: 'singer',
@@ -40,24 +43,46 @@ const columns = [
     dataIndex: 'dt',
 }
 ];
+const songListContentRef = ref(null);
+let isFirst = true;
 const songListRef = ref(null);
 const dataSource = ref([]);
 const store = useStore();
 const songList = computed(()=>store.state.player.songList);
 const playingIndex = computed(()=>store.state.player.playingIndex)
-dataSource.value = songList.value.map((e,index)=>({
-    id:e.id,
-    index,
-    name:<div class={'name'}>{e.name}</div>,
-    singer:<div class={'singer'}>{e.singer}</div>,
-    share:<div class={'share'}><LinkOutlined /></div>,
-    dt:<div class={'dt'}>{e.dt}</div>,
-})); 
+dataSource.value = songList.value.map((e,index)=>{
+    const content = []
+    console.log(e);
+    e.singer.forEach((el,index)=>{
+      if(index > 0){
+        content.push(<span class="slash">/</span>);
+      }
+      content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
+    });
+    return {
+        id:e.id,
+        index,
+        song:<div class="song">{e.name}<vipIcon style={e.fee === 1 ? '' : 'display:none'} /><mvIcon style={e.mv != 0 ? '' : 'display:none'} /><noCopyright style={e.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+        singer:<div class="singer">{content}</div>,
+        share:<div class={'share'}><LinkOutlined /></div>,
+        dt:<div class='dt'>{e.dt}</div>,
+    }
+}); 
 
 const setScroll = (index)=>{
-    songListRef.value.scrollTo(0,32.425*(index-6))
+    songListContentRef.value.scrollTo(0,32.425*(index-6))
+}
+const close = e=>{
+    if(isFirst){
+        isFirst = false;
+    }else{
+        if(!songListRef.value.contains(e.target)){
+            store.commit('changeSlider',0);
+        }
+    }
 }
 onMounted(()=>{
+    window.addEventListener('click',close);
     setScroll(playingIndex.value);
 })
 const customRow = (record) => {
@@ -74,8 +99,12 @@ const handlePlaySong = (id,index)=>{
 watch(playingIndex,()=>{
     setScroll(playingIndex.value);
 })
+onUnmounted(()=>{
+    window.removeEventListener('click',close);
+})
 </script>
 <style lang="less" scoped>
+@import '@/assets/theme.less';
 #songList{
     position: absolute;
     right: 0;
@@ -139,6 +168,33 @@ watch(playingIndex,()=>{
                     top: 12px;
                 }
             } 
+            .song{
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              display: flex;
+              align-items: center;
+              justify-content:left;
+              .vipIcon,mvIcon,noCopyrightIcon{
+                margin-left: 1px;
+              }
+            }
+            .singer{
+              cursor: pointer;
+              color: #999;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              .singerName{
+                transition: none;
+              }
+              .singerName:hover{
+                color: #b1b9b9;
+              }
+            }
+            .dt{
+              color: #999;
+            }
             .ant-table-cell{
                 background-color: transparent;
                 border-bottom: 0;
@@ -171,14 +227,19 @@ watch(playingIndex,()=>{
             .table-striped td {
                 background-color: #2f2f2f;
             }
-            tr:hover .ant-table-cell{
-                background-color: #373737;
-                color: white;
+            tr:hover {
+                .dt,.song{
+                    background-color: #373737;
+                    color: white;
+                }
+                .singer .singerName,.slash{
+                    color: white;
+                }
             }
             tr td:first-child{
                 padding-left: 16px;
                 font-size: 13px;
-                color: #ffffff;
+                color: @black-font-color;
             }
             .abc{
                 font-size: 13px;
