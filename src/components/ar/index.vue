@@ -135,7 +135,6 @@ watch(() => route.params.artistId, val => {
     offset = 0;
     arInfo.value = {};
     arId.value = val;
-    console.log(activeKey.value);
     handleIndexChange(activeKey.value);
 },{
     immediate:true,

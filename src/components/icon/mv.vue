@@ -1,13 +1,6 @@
 <template>
     <div class="mvIcon" @click="toMv">MV<CaretRightOutlined /></div>
 </template>
-<script setup>
-import {CaretRightOutlined} from '@ant-design/icons-vue'
-const emit = defineEmits(['toMv'])
-const toMv = ()=>{
-    emit('toMv');
-}
-</script>
 <style scoped lang="less">
 .mvIcon{
     display: inline-block;

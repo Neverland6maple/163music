@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import store from '@/store'
 const routes = [
   {
     name:'Index',
@@ -36,12 +37,20 @@ const routes = [
     name:'Artist',
     path:'/artist/:artistId',
     component:()=>import('@/components/ar/index.vue')
+  },{
+    name:'Mv',
+    path:'/mv/:mvId',
+    component:()=>import('@/components/mv/index.vue')
   }
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes
+  routes,
 })
 
+router.beforeEach((to,from,next)=>{
+  store.commit('changeIsSpreading',false);
+  next();
+})
 export default router

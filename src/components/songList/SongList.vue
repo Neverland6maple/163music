@@ -32,6 +32,16 @@ const {proxy:{$axios}} = getCurrentInstance();
 const columns = [
   {
     dataIndex: 'song',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:(event) => {
+          const id = event.target.dataset.id
+          if(id){
+            router.push(`/mv/${event.target.dataset.id}`)
+          }
+        }
+      }
+    },
   },
   {
     dataIndex: 'singer',
@@ -62,7 +72,7 @@ dataSource.value = songList.value.map((e,index)=>{
     return {
         id:e.id,
         index,
-        song:<div class="song">{e.name}<vipIcon style={e.fee === 1 ? '' : 'display:none'} /><mvIcon style={e.mv != 0 ? '' : 'display:none'} /><noCopyright style={e.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+        song:<div class="song">{e.name}<vipIcon style={e.fee === 1 ? '' : 'display:none'} /><mvIcon style={e.mv != 0 ? '' : 'display:none'} data-id={item.mv} /><noCopyright style={e.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
         singer:<div class="singer">{content}</div>,
         share:<div class={'share'}><LinkOutlined /></div>,
         dt:<div class='dt'>{e.dt}</div>,

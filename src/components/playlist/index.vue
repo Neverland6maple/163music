@@ -121,7 +121,17 @@ const columns = [
   {
     title: '音乐标题',
     dataIndex: 'song',
-    width:'38%'
+    width:'38%',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:(event) => {
+          const id = event.target.dataset.id
+          if(id){
+            router.push(`/mv/${event.target.dataset.id}`)
+          }
+        }
+      }
+    },
   },
   {
     title: '歌手',
@@ -205,7 +215,7 @@ const getList = async (id)=>{
       number:index+1,
       like:<HeartOutlined/>,
       download:<DownloadOutlined/>,
-      song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+      song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
       singer: <div class="singer">{content}</div>,
       album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
       dt:<div class='dt'>{timeFormat(item.dt)}</div>,

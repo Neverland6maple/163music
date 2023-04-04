@@ -10,7 +10,11 @@
                 </div>
                 <div class="songInfoBody">
                     <div class="songInfoSketch">
-                        <h2 class="songName">{{ songInfo.name }}</h2>
+                        <h2 class="songName">
+                            {{ songInfo.name }}
+                            <vipIcon :style="{'display':songInfo.fee === 1 ? '' : 'none'}" />
+                            <router-link :to="`/mv/${songInfo.mv}`"><mvIcon :style="{'display':songInfo.mv != 0 ? '' :'none'}" /></router-link>
+                        </h2>
                         <div class="songInfo">
                             <div>歌手:
                                 <template v-for="(item,index) in songInfo.ar" :key="item.id">
@@ -18,7 +22,7 @@
                                     <a @click="toAr(item.id)">{{ item.name }}</a>
                                 </template>
                             </div>
-                            <div>专辑:{{ songInfo?.al?.name }}</div>
+                            <div>专辑:<router-link :to="`/album/${songInfo?.al?.id}`">{{ songInfo?.al?.name }}</router-link></div>
                             <div>来源:</div>
                         </div>
                     </div>
@@ -45,6 +49,9 @@ import { computed } from '@vue/reactivity'
 import { defineComponent, getCurrentInstance,watch,ref, onMounted } from 'vue';
 import lyricComponent from '@/components/player/lyric.vue'
 import commentList from './unit/commentList.vue';
+import vipIcon from '@/components/icon/vip.vue'
+import mvIcon from './icon/mv.vue';
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 const store = useStore();
 const time = ref(0);
 const spinning = ref(false);
@@ -70,10 +77,8 @@ const getList = async (id,before,current)=>{
 }
 const toAr = (id)=>{
     router.push(`/artist/${id}`);
-    store.commit('changeIsSpreading',false);
 }
 const handlePageChange = (page)=>{
-    console.log(page);
     getList(songInfo.value.id,time.value,page);
 }
 watch(()=>songInfo.value,(val)=>{

@@ -24,7 +24,7 @@
             <div class="songSinger">
               <template v-for="(item,index) in songInfo.ar" :key="item.id">
                 {{ index !== 0 ? ' /' : ' ' }}
-                <router-link to="/">{{ item.name }}</router-link>
+                <router-link :to="`/artist/${item.id}`" >{{ item.name }}</router-link>
               </template>
             </div>
           </div>

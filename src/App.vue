@@ -1,25 +1,34 @@
 <template>
   <div id="music">
     <a-layout>
+       <!-- header -->
       <Suspense>
         <a-layout-header><myHeader></myHeader></a-layout-header>
       </Suspense>
+      
+      <!-- body -->
       <a-layout>
+
+        <!-- sider -->
         <a-layout-sider width="200">
           <mySlider></mySlider>
         </a-layout-sider>
+
+        <!-- content -->
         <a-layout-content>
           <Suspense>
               <router-view></router-view>
           </Suspense>
         </a-layout-content>
+
         <Suspense><Login v-if="loginShow"></Login></Suspense>
         <PlayerPage></PlayerPage>
         <SongList v-if="slider === 1"></SongList>
+     
       </a-layout>
-      <a-layout-footer>
-        <myFooter :skipTime="skipTime" a="1"></myFooter>
-      </a-layout-footer>
+
+      <!-- footer -->
+      <a-layout-footer><myFooter :skipTime="skipTime" a="1"></myFooter></a-layout-footer>
     </a-layout>
   </div>
 </template>

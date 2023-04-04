@@ -71,6 +71,16 @@ const columns = [
   {
     title: '音乐标题',
     dataIndex: 'song',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:(event) => {
+          const id = event.target.dataset.id
+          if(id){
+            router.push(`/mv/${event.target.dataset.id}`)
+          }
+        }
+      }
+    },
   },
   {
     title: '时长',
@@ -108,7 +118,7 @@ const getList = async (id,ind)=>{
       number:index+1,
       like:<HeartOutlined/>,
       download:<DownloadOutlined/>,
-      song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /> </div>,
+      song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /> </div>,
       dt:<div class='dt'>{timeFormat(item.dt)}</div>,
     })
   }
