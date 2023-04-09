@@ -10,7 +10,10 @@ import ScanPre from '@/components/Login/ScanPre.vue'
 import ScanAfter from './Login/ScanAfter.vue';
 import { useStore } from 'vuex';
 import { getCurrentInstance, ref } from 'vue';
+import {useRoute, useRouter} from 'vue-router'
 const store = useStore();
+const router = useRouter();
+const route = useRoute();
 const {proxy:{$axios,$post}} = getCurrentInstance();
 const qrImg = ref('');
 const showCom = ref(ScanPre);
@@ -61,6 +64,7 @@ const login = async ()=>{
               localStorage.setItem('cookie', res3.cookie);
               await getLoginStatus();
               exit();
+              router.push(JSON.parse(route.query.from))
             }
         }, 3000);
     }

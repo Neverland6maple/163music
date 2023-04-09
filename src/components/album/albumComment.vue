@@ -23,7 +23,7 @@
                 </div>
             </div>
         </div>
-        <commentList @handlePageChange="handlePageChange" :hotComment="hotComment" :latest-comment="latestComment" :current="current" :spinning="spinning" :total="total"></commentList>
+        <commentList @handlePageChange="handlePageChange" :hotComments="hotComment" :latest-comments="latestComment" :current="current" :spinning="spinning" :total="total"></commentList>
     </div>
 </template>
 <script setup>
@@ -57,6 +57,7 @@ const getLatestComments = async (id,pageNo)=>{
         method:'get',
         url:`/api/comment/new?type=${props.type}&id=${id}&pageSize=30&pageNo=${pageNo}&sortType=3&cursor=${cursor.value}`,
     })
+    console.log(res.data);
     latestComment.value = res.data.comments;
     total.value = res.data.totalCount;
     cursor.value = res.data.cursor;

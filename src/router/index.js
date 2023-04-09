@@ -8,7 +8,7 @@ const routes = [
     children:[{
       path:'',
       component:()=>import('@/components/index/homepage/Homepage.vue')
-    },]
+    },],
   },{
     name:'Likes',
     path:'/likes',
@@ -40,7 +40,10 @@ const routes = [
   },{
     name:'Mv',
     path:'/mv/:mvId',
-    component:()=>import('@/components/mv/index.vue')
+    component:()=>import('@/components/mv/index.vue'),
+  },{
+    path:'/test',
+    component:()=>import('@/components/test.vue'),
   }
 ]
 
@@ -50,6 +53,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to,from,next)=>{
+  if(to.name === 'Mv'){
+    store.commit('changeIsCover',true);
+  }
   store.commit('changeIsSpreading',false);
   next();
 })

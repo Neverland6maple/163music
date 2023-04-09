@@ -42,7 +42,7 @@ import { computed } from '@vue/reactivity';
 import store from '@/store';
 import { useRouter } from 'vue-router';
 const selectedKeys = ref(['1']);
-const openKeys = ref(['sub1']);
+const openKeys = ref(['sub1','sub2']);
 const {proxy:{$axios,$post}} = getCurrentInstance();
 const profile = computed(()=>store.state.user.profile);
 const islogin = computed(()=>store.getters['user/islogin']);
@@ -81,9 +81,6 @@ watch(islogin,(newVal)=>{
 },{
   immediate:true,
 })
-watch(() => openKeys, val => {
-  console.log('openKeys', val);
-});
 </script>
 
 <style lang="less" scoped>

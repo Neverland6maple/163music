@@ -9,7 +9,6 @@ export default {
                 state.searchHistory.pop();
             }
             const index = state.searchHistory.indexOf(value);
-            console.log(index);
             if(index >= 0){
                 state.searchHistory.splice(index,1);
             }

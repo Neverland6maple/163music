@@ -6,29 +6,29 @@
         <a-layout-header><myHeader></myHeader></a-layout-header>
       </Suspense>
       
-      <!-- body -->
-      <a-layout>
+         <!-- body -->
+        <a-layout>
 
-        <!-- sider -->
-        <a-layout-sider width="200">
-          <mySlider></mySlider>
-        </a-layout-sider>
+          <!-- sider -->
+          <a-layout-sider v-if="isCover === false" width="200">
+            <mySlider></mySlider>
+          </a-layout-sider>
 
-        <!-- content -->
-        <a-layout-content>
-          <Suspense>
-              <router-view></router-view>
-          </Suspense>
-        </a-layout-content>
+          <!-- content -->
+          <a-layout-content>
+            <Suspense>
+                <router-view></router-view>
+            </Suspense>
+          </a-layout-content>
 
-        <Suspense><Login v-if="loginShow"></Login></Suspense>
-        <PlayerPage></PlayerPage>
-        <SongList v-if="slider === 1"></SongList>
-     
-      </a-layout>
+          <Suspense><Login v-if="loginShow"></Login></Suspense>
+          <PlayerPage v-if="isCover === false"></PlayerPage>
+          <SongList v-if="slider === 1"></SongList>
 
-      <!-- footer -->
-      <a-layout-footer><myFooter :skipTime="skipTime" a="1"></myFooter></a-layout-footer>
+        </a-layout>
+
+        <!-- footer -->
+        <a-layout-footer v-if="isCover === false"><myFooter :skipTime="skipTime" a="1"></myFooter></a-layout-footer>
     </a-layout>
   </div>
 </template>
@@ -49,6 +49,7 @@ export default {
     const slider = computed(()=>store.state.slider);
     const isSpreading = computed(()=>store.state.isSpreading);
     const skipTime = ref(0);
+    const isCover = computed(()=>store.state.isCover);
     const setSkipTime = (value)=>{
       skipTime.value = value;
     }
@@ -59,10 +60,10 @@ export default {
       slider,
       skipTime,
       loginShow,
+      isCover,
     }
-  }
+  },
 }
 </script>
 <style lang="less" scoped>
-
 </style>

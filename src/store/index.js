@@ -7,6 +7,7 @@ export default createStore({
     isSpreading:false,
     slider:0, // 0为不展示，1为播放列表，2为消息,
     loginShow:false,
+    isCover:false,
   },
   getters:{
   },
@@ -19,6 +20,9 @@ export default createStore({
     },
     changeLoginShow(state,value){
       state.loginShow = value;
+    },
+    changeIsCover(state,value){
+      state.isCover = value;
     }
   },
   actions:{

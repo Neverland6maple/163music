@@ -7,11 +7,11 @@
                 <div class="commentList">
                     <div class="commentItem" v-for="(item) in partHotComments" :key="item.commentId">
                         <div class="userPic">
-                            <img :src="item.user.avatarUrl" alt="" class="picImg">
+                            <img :src="item.user.avatarUrl" alt="" class="picImg" @click="toUser(item.user.userId)">
                         </div>
                         <div class="commentBody">
                             <div class="comment">
-                                <div class="username">
+                                <div class="username" @click="toUser(item.user.userId)">
                                     {{ item.user.nickname }}
                                     <img :src="item.user.vipRights.associator ? item.user.vipRights.associator. iconUrl : (item.user.vipRights.musicPackage ? item.user.vipRights.musicPackage.  iconUrl : '')" alt="" v-if="item.user.vipRights && (item.user.vipRights.  associator || item.user.vipRights.musicPackage)" class="vipPic">
                                 </div>
@@ -43,11 +43,11 @@
                 <div class="commentList">
                     <div class="commentItem" v-for="(item) in latestComments" :key="item.commentId">
                         <div class="userPic">
-                            <img :src="item.user.avatarUrl" alt="" class="picImg">
+                            <img :src="item.user.avatarUrl" alt="" class="picImg" @click="toUser(item.user.userId)">
                         </div>
                         <div class="commentBody">
                             <div class="comment">
-                                <div class="username">
+                                <div class="username" @click="toUser(item.user.userId)">
                                     {{ item.user.nickname }}
                                     <img :src="item.user.vipRights.associator ? item.user.vipRights.associator. iconUrl : (item.user.vipRights.musicPackage ? item.user.vipRights.musicPackage.  iconUrl : '')" alt="" v-if="item.user.vipRights && (item.user.vipRights.  associator || item.user.vipRights.musicPackage)" class="vipPic">
                                 </div>
@@ -76,6 +76,7 @@ import { ref , computed} from 'vue';
 import dateFormat from '@/utils/dateFormat';
 import TransparemtBtn from './TransparemtBtn.vue';
 import {LikeOutlined , ShareAltOutlined , CommentOutlined ,} from '@ant-design/icons-vue'
+import { useRouter } from 'vue-router';
 const props = defineProps({
     hotComments:Array,
     latestComments:Array,
@@ -83,13 +84,17 @@ const props = defineProps({
     total:Number,
 })
 const current = ref(1);
-const emit = defineEmits(['handlePageChange','change']);
+const router = useRouter();
+const emit = defineEmits(['handlePageChange']);
 const partHotComments = computed(()=>props.hotComments.slice(0,10))
 const handlePageChange = (newPage)=>{
     emit('handlePageChange',newPage);
 }
 const reset = ()=>{
     current.value = 1;
+}
+const toUser = (id)=>{
+    router.push(`/u/${id}`);
 }
 defineExpose({
     reset,
@@ -106,7 +111,6 @@ defineExpose({
             place-content: center center;
         }
     }
-    
     .commentItem{
         width: 100%;
         display: flex;
@@ -215,11 +219,14 @@ defineExpose({
             }
         }
     }
-    
+    .username{
+        cursor: pointer;
+    }
 }
 .picImg{
     width: 100%;
     height: 100%;
+    cursor: pointer;
 }
 .title{
     text-align: left;

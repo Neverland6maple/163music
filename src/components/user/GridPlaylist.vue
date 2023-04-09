@@ -2,20 +2,20 @@
     <div id="gridPlaylist">
         <div v-if="type == 0" class="gridContent">
             <div class="gridBox" v-for="(item) in playlist" :key="item.id">
-                <div class="cover">
+                <div class="cover" @click="toPlaylist(item.id)">
                     <img class="coverPic" :src="item.coverImgUrl" alt="">
                     <PlayCircleFilled />
                 </div>
-                <h3 class="title">{{ item.name }}</h3>
+                <h3 class="title" @click="toPlaylist(item.id)">{{ item.name }}</h3>
                 <div class="count">{{item.trackCount}}首</div>
             </div>
         </div>
         <div v-else-if="type == 1" class="rowContent">
             <div class="row" v-for="(item) in playlist" :key="item.id">
-                <div class="cover">
+                <div class="cover" @click="toPlaylist(item.id)">
                     <img class="coverPic" :src="item.coverImgUrl" alt="">
                 </div>
-                <h3 class="title">{{ item.name }}</h3>
+                <h3 class="title" @click="toPlaylist(item.id)">{{ item.name }}</h3>
                 <div class="count">歌曲：{{item.trackCount}}首</div>
                 <div class="creator">by<span class="creatorName">{{ item.creator.nickname }}</span></div>
                 <div class="subscribed"><FolderAddOutlined />{{ item.subscribedCount }}</div>
@@ -25,7 +25,7 @@
         <div v-else-if="type == 2" class="graphContent">
             <div  v-show="!refresh">
                 <div class="graphBox" v-for="(item,index) in graphPlaylist" :key="item.id">
-                    <div class="cover">
+                    <div class="cover" @click="toPlaylist(item.id)">
                         <img class="coverPic" :src="item.coverImgUrl" alt="">
                     </div>
                     <div class="list">
@@ -33,7 +33,7 @@
                         <div class="listTable">
                             <MyTable :columns="columns" :data-source="dataSource[index]" :pagination="false" :spinning="spinning[index]" @handlePlaySong="handlePlaySong" :showHeader="false" :id="item.id"></MyTable>
                         </div>
-                        <div class="total"><router-link to="/" class="toComplete">查看全部{{umap.get(item.id)}}首<RightOutlined /></router-link></div>
+                        <div class="total"><router-link :to="`/playlist/${item.id}`" class="toComplete">查看全部{{umap.get(item.id)}}首<RightOutlined /></router-link></div>
                     </div>
                 </div>
                 <a-pagination v-model:current="current" :total="playlist.length" :pageSize="pagesize" show-less-items @change="handlePageChange" :showSizeChanger="false"/>
@@ -51,6 +51,7 @@ import mvIcon from '@/components/icon/mv.vue'
 import vipIcon from '@/components/icon/vip.vue'
 import noCopyright from '../icon/noCopyright.vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 const props = defineProps({
     playlist:Array,
     type:Number
@@ -91,6 +92,7 @@ const columns = [
 const store = useStore();
 const pagesize = ref(20);
 const current = ref(1);
+const router = useRouter();
 const spinning = reactive(new Array(pagesize.value).fill(false));
 const refresh  = ref(false);
 const dataSource = ref([]);
@@ -158,6 +160,9 @@ const handlePageChange = (newPage)=>{
         refresh.value = false
     },0)
 }
+const toPlaylist = (id)=>{
+    router.push(`/playlist/${id}`)
+}
 watchEffect(()=>{
     if(props.playlist){
         for(let i = 0;i<pagesize.value && i < props.playlist.length;i++){
@@ -183,9 +188,9 @@ watchEffect(()=>{
             text-align: left;
             .cover{
                 width: 100%;
-                height: auto;
                 object-fit: contain;
                 position: relative;
+                cursor: pointer;
                 .anticon{
                     position: absolute;
                     background-color: #ec4141;
@@ -205,6 +210,7 @@ watchEffect(()=>{
             .title{
                 color: @black-font-color;
                 line-height: 30px;
+                cursor: pointer;
             }
             .count{
                 font-size: 12px;
@@ -232,6 +238,7 @@ watchEffect(()=>{
             .cover{
                 height: 60px;
                 width: 60px;
+                cursor: pointer;
                 border-radius: 6px;
                 overflow: hidden;
             }
@@ -239,6 +246,7 @@ watchEffect(()=>{
                 color: @black-font-color;
                 font-size: 14px;
                 flex: 1;
+                cursor: pointer;
                 margin-left: 8px;
             }
             .count{
@@ -292,6 +300,7 @@ watchEffect(()=>{
                 border-radius: 6px;
                 overflow: hidden;
                 margin-right: 64px;
+                cursor: pointer;
             }
             .list{
                 flex: 1;

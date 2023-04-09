@@ -1,5 +1,5 @@
 <template>
-    <div id="downloadAll">
+    <div class="downloadAll">
         <a-button type="primary" :loading="iconLoading" @click="enterIconLoading">
             <template #icon><DownloadOutlined /></template>
             播放全部
@@ -12,8 +12,8 @@ import {DownloadOutlined} from '@ant-design/icons-vue'
 </script>
 <style lang="less" scoped>
 @import '@/assets/theme.less';
-#downloadAll{
-    .ant-btn{
+.downloadAll{
+   .ant-btn{
         height: 32px;
         border-radius: 176px;
         color: @black-font-color;

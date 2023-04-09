@@ -22,15 +22,15 @@
                 <a-divider style="margin: 0;height:1px;width: 100%;background-color: #454545;margin-top: 14px;"></a-divider>
                 <div id="userStatistic">
                     <div class="logs statisticItem">
-                        <div class="statisticNum">{{ userInfo.eventCount || 0}}</div>
+                        <div class="statisticNum">{{ userInfo.eventCount ?? 0}}</div>
                         <div class="statisticTag">动态</div>
                     </div>
                     <div class="follows statisticItem">
-                        <div class="statisticNum">{{ userInfo.follows || 0}}</div>
+                        <div class="statisticNum">{{ userInfo.follows ?? 0}}</div>
                         <div class="statisticTag">关注</div>
                     </div>
                     <div class="fans statisticItem">
-                        <div class="statisticNum">{{ userInfo.followeds || 0 }}</div>
+                        <div class="statisticNum">{{ userInfo.followeds ?? 0 }}</div>
                         <div class="statisticTag">粉丝</div>
                     </div>
                 </div>

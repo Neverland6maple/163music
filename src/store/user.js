@@ -5,7 +5,7 @@ export default {
     },
     getters:{
         islogin(){
-            return Boolean(localStorage.getItem('profile')) || false;
+            return Boolean(localStorage.getItem('cookie')) || false;
         }
     },
     mutations:{

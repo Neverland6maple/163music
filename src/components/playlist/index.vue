@@ -156,7 +156,7 @@ const columns = [
       return {
         onClick:(event) => {
           if(record.album.props.playlistId == playlistId.value){
-            console.log('是同一张专辑');
+            alert('是同一张专辑');
           }else{
             router.push(`/album/${record.album.props.playlistId}`)
           }
@@ -188,19 +188,21 @@ let songList = [];
 const isCreator = computed(()=>profile.value.userId === creator.value.userId)
 const getList = async (id)=>{
   spinning.value = true;
-  const {data:res} = await $axios({
-    method:'get',
-    url:`/api/playlist/track/all?id=${id}`,
-  });
   const {data:res1} = await $axios({
     method:'get',
     url:`/api/playlist/detail?id=${id}`,
   });
+  creator.value = res1.playlist.creator;
+  playlist.value = res1.playlist;
+  const limit = res1.playlist.trackCount > 1000 ? 1000 : res1.playlist.trackCount;
+  const {data:res} = await $axios({
+    method:'get',
+    url:`/api/playlist/track/all?id=${id}&limit=${1000}&offset=0`,
+  });
+  
   dataSource.value = [];
   songList = [];
   songs.value = res.songs;
-  creator.value = res1.playlist.creator;
-  playlist.value = res1.playlist;
   songs.value.forEach((item,index)=>{
     const content = []
     item.ar.forEach((el,index)=>{
@@ -320,8 +322,6 @@ watch(()=>route.params.playlistId,(newValue)=>{
                 #playlistTag{
                   .slash{
                     margin: 0 4px;
-                  }
-                  .tagItem{
                   }
                 }
                 #playlistStatistics{

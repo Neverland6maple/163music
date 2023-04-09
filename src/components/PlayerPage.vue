@@ -67,7 +67,7 @@ const getList = async (id,before,current)=>{
     spinning.value = true;
     const {data:res} = await $axios({
         method:'get',
-        url: `/api//comment/music?id=${id}&limit=20&offset=${20*(current-1)}&before=${before}`
+        url: `/api/comment/music?id=${id}&limit=20&offset=${20*(current-1)}&before=${before}`
     })
     if(res.hotComments) hotComments.value = res.hotComments;
     latestComments.value = res.comments;

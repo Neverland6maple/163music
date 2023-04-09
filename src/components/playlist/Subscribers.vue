@@ -1,11 +1,11 @@
 <template>
     <div id="subscribers">
         <div class="subscriberItem" v-for="(item) in subscribers" :key="item.avatarImgId">
-            <div class="userPic">
+            <div class="userPic" @click="toUser(item.userId)">
                 <img :src="item.avatarUrl" alt="" class="coverPic">
             </div>
             <div class="userInfo">
-                <div class="userName">{{ item.nickname }}</div>
+                <div class="userName" @click="toUser(item.userId)">{{ item.nickname }}</div>
                 <div class="userSignature" v-if="item.signature">{{ item.signature }}</div>
             </div>
         </div>
@@ -13,10 +13,12 @@
 </template>
 <script setup>
 import { getCurrentInstance, ref } from 'vue';
+import { useRouter } from 'vue-router';
 const props = defineProps({
     id:Number,
 })
 const {proxy:{$axios}} = getCurrentInstance();
+const router = useRouter();
 const subscribers = ref([]);
 const getSubscribers = async (id)=>{
     const {data:res} = await $axios({
@@ -24,6 +26,9 @@ const getSubscribers = async (id)=>{
         url:`/api/playlist/subscribers?id=${id}&limit=60`
     })
     subscribers.value = res.subscribers;
+}
+const toUser = (id)=>{
+    router.push(`/u/${id}`);
 }
 getSubscribers(props.id);
 </script>
@@ -46,6 +51,7 @@ getSubscribers(props.id);
             height: 90px;
             border-radius: 50%;
             overflow: hidden;
+            cursor: pointer;
         }
         .userInfo{
             display: flex;
@@ -60,6 +66,7 @@ getSubscribers(props.id);
             overflow: hidden;
             .userName{
                 font-size: 14px;
+                cursor: pointer;
             }
             .userSignature{
                 width: 100%;

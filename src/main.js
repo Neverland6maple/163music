@@ -4,7 +4,6 @@ import Antd from 'ant-design-vue'
 import router from './router'
 import store from './store'
 import { request} from './request/axios'
-
 import 'ant-design-vue/dist/antd.css';
 import '@/assets/reset.css'
 import '@/assets/common.less'

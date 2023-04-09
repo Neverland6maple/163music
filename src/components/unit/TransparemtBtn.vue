@@ -1,5 +1,5 @@
 <template>
-    <div id="downloadAll">
+    <div class="transparentBtn">
         <a-button type="primary" :style="styleObj">
             <div class="icon">
                 <slot name="icon"></slot>
@@ -15,7 +15,7 @@ defineProps({
 </script>
 <style lang="less" scoped>
 @import '@/assets/theme.less';
-#downloadAll{
+.transparentBtn{
     .ant-btn{
         border-radius: 176px;
         color: @black-font-color;

@@ -52,6 +52,8 @@ import vipIcon from '@/components/icon/vip.vue'
 import noCopyright from '../icon/noCopyright.vue';
 import dateFormat from '@/utils/dateFormat';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 const props = defineProps({
     albums:Array,
     type:Number

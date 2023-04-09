@@ -13,7 +13,7 @@
                     <span id="goNext"></span>
                 </div>
                 <div id="search">
-                    <a-input id="ipt" placeholder="Basic usage" v-model:value="keyword" @pressEnter="handleSearch(keyword)" @focus="changeIsSearching"> 
+                    <a-input id="ipt" placeholder="Basic usage" v-model:value="keyword" @change="getSuggest(keyword)" @pressEnter="handleSearch(keyword)" @focus="changeIsSearching"> 
                         <template #prefix>
                             <user-outlined type="user" />
                         </template>
@@ -28,33 +28,50 @@
                     <CustomerServiceOutlined />
                 </div>
                 <div id="searchRecommand" v-if="isSearching">
-                    <div id="searchHistory">
-                        <div class="title">搜索历史<DeleteOutlined class="deleteAllIcon" @click="handleDeleteAll"/></div>
-                        <div id="historyBox" :style="{'max-height': isCheckAll ? '' : '68px'}">
-                            <div class="historyItem" v-for="(item,index) in searchHistory" :key="index" @click="handleSearch(item)">
-                                {{ item }}
-                                <div class="deleteIcon" @click="handleDelete(index,$event)">
-                                    X
+                    <div class="hot" v-if="!keyword">
+                        <div id="searchHistory">
+                            <div class="title">搜索历史<DeleteOutlined class="deleteAllIcon" @click="handleDeleteAll"/></div>
+                            <div id="historyBox" :style="{'max-height': isCheckAll ? '' : '68px'}">
+                                <div class="historyItem" v-for="(item,index) in searchHistory" :key="index" @click="handleSearch(item)">
+                                    {{ item }}
+                                    <div class="deleteIcon" @click="handleDelete(index,$event)">
+                                        X
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="checkAll" @click="changeIsCheckAll" v-if="!isCheckAll">查看全部</div>
+                        </div>
+                        <div id="searchHot">
+                            <div class="title">热搜榜</div>
+                            <div class="hotItem" v-for="(item,index) in hotItem" :key="index" @click="handleSearch(item.searchWord)">
+                                <div class="itemNo">{{ index }}</div>
+                                <div class="hotItemBody">
+                                    <div class="up">
+                                        <div class="itemName">{{ item.searchWord }}</div>
+                                        <div class="itemHot" v-if="item.iconType === 1">
+                                            <img :src="item.iconUrl" alt="" class="hotImg">
+                                        </div>
+                                        <div class="itemPop">{{ item.score }}</div>
+                                    </div>
+                                    <div class="bottom">
+                                        {{ item.content }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div id="checkAll" @click="changeIsCheckAll" v-if="!isCheckAll">查看全部</div>
                     </div>
-                    <div id="searchHot">
-                        <div class="title">热搜榜</div>
-                        <div class="hotItem" v-for="(item,index) in hotItem" :key="index">
-                            <div class="itemNo">{{ index }}</div>
-                            <div class="hotItemBody">
-                                <div class="up">
-                                    <div class="itemName">{{ item.searchWord }}</div>
-                                    <div class="itemHot" v-if="item.iconType === 1">
-                                        <img :src="item.iconUrl" alt="" class="hotImg">
-                                    </div>
-                                    <div class="itemPop">{{ item.score }}</div>
-                                </div>
-                                <div class="bottom">
-                                    {{ item.content }}
-                                </div>
+                    <div class="suggest" v-else>
+                        <div v-for="(item,index) in suggestList.order" :key="index">
+                            <div class="title">
+                                <span class="titleIcon"><CustomerServiceOutlined /></span>
+                                {{ suggestObj[item] }}
+                            </div>
+                            <div class="suggestItem" v-for="(item1) in suggestList[item]" :key="item1.id" @click="handleSearch(item1.name)">
+                                <span class="name">{{ item1.name }}</span>
+                                <template v-if="item === 'songs'">
+                                    <span class="slash">-</span>
+                                    <span class="Arname" v-for="(ar) in item1.artists" :key="ar.id">{{ ar.name }}</span>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -108,29 +125,38 @@
         </div>
     </div>
 </template>
-
 <script setup>
 import {CustomerServiceOutlined,DownOutlined,SkinOutlined,SettingOutlined,MailOutlined,ExpandOutlined,MinusOutlined,BorderOutlined,CloseOutlined,ExpandAltOutlined,DeleteOutlined} from '@ant-design/icons-vue'
 import { computed } from '@vue/reactivity';
 import { getCurrentInstance, ref,watch} from 'vue';
-import { useRouter } from 'vue-router';
+import { onBeforeRouteUpdate, useRouter ,useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import userNav from '@/components/UserNav.vue'
+import debounce from '@/utils/debounce';
 const keyword = ref('');
 const router = useRouter();
+const route = useRoute();
 const store = useStore();
-const isSpreading = computed(()=>store.state.isSpreading);
+const {proxy:{$axios,$post}} = getCurrentInstance()
 const myIsSpreading = ref(false);
 const isCheckAll = ref(false);
 const isSearching = ref(false);
 const subnavRef = ref(null);
 const hotItem = ref([]);
+const suggestList = ref([]);
+const suggestObj = ref({
+    'songs':'单曲',
+    'artists':'歌手',
+    'albums':'专辑',
+    'playlists':'歌单',
+})
+let lock = false;
+const isSpreading = computed(()=>store.state.isSpreading);
 const islogin = computed(()=>store.getters['user/islogin']);
 const profile = computed(()=>store.state.user.profile);
-let lock = false;
-const {proxy:{$axios}} = getCurrentInstance()
 const searchHistory = computed(()=>store.state.history.searchHistory);
 const handleSearch = (value)=>{
+    keyword.value = value;
     store.commit('history/setSearchHistory',value);
     hide();
     router.push({
@@ -154,9 +180,16 @@ const hide = function (e){
 const changeIsSearching = async ()=>{
     isSearching.value = true;
     window.addEventListener('click',hide);
-
-    const {data:res} = await $axios('/api/search/hot/detail');
-    hotItem.value = res.data;
+    if(keyword.value){
+        const {data:res} = await $axios({
+            method:'get',
+            url:`/api/search/suggest?keywords=${keyword.value}`
+        })
+        if(res.result) suggestList.value = res.result;
+    }else{
+        const {data:res} = await $axios('/api/search/hot/detail');
+        hotItem.value = res.data;
+    }
 }
 const changeIsCheckAll = ()=>{
     isCheckAll.value = !isCheckAll.value;
@@ -178,6 +211,16 @@ const handleDelete = (index,e)=>{
 const handleDeleteAll = ()=>{
     store.commit('history/deleteSearchHistoryAll');
 }
+const getSuggest = debounce(async (key)=>{
+    const {data:res} = await $axios({
+        method:'get',
+        url:`/api/search/suggest?keywords=${key}`
+    })
+    if(res.result) suggestList.value = res.result;
+},300)
+watch(()=>route.query.from,val=>{
+    store.commit('changeLoginShow',true)
+})
 watch(isSpreading,(newValue)=>{
     if(newValue){
         setTimeout(()=>{
@@ -185,10 +228,9 @@ watch(isSpreading,(newValue)=>{
         },300)
     }else{
         myIsSpreading.value = newValue;
-    }       
+    }
 },{immediate:true})
 </script>
-
 <style lang="less" scoped>
 @import '@/assets/theme.less';
 #myHeader{
@@ -263,128 +305,172 @@ watch(isSpreading,(newValue)=>{
             }
             #searchRecommand{
                 position: absolute;
-                bottom: -530px;
+                top: 66px;
                 left: -14px;
-                width: 360px;
-                height: 520px;
+                max-height: 520px;
                 background-color: #363636;
                 z-index: 100;
                 border-radius: 8px;
                 box-shadow: 0 0 8px #111;
-                padding: 16px;
                 overflow: auto;
-                #searchHistory{
-                    position: relative;
-                    overflow: hidden;
-                    .deleteAllIcon{
-                        padding-left: 4px;
-                        cursor: pointer;
-                    }
-                    #historyBox{
-                        padding: 6px;
-                        display: flex;
-                        flex-wrap: wrap;
-                        justify-content:left;
-                        .historyItem{
-                            padding: 0px 16px;
-                            border: solid 1px #545454;
-                            line-height: 24px;
-                            margin-right: 10px;
-                            color: #d7d7d7;
-                            border-radius: 12px;
-                            font-size: 13px;
-                            margin-bottom: 7px;
-                            max-width: 100%;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                            position: relative;
-                            cursor: pointer;
-                            &:hover .deleteIcon{
-                                display: block;
-                            }
-                            .deleteIcon{
-                                display: none;
-                                content: 'x';
-                                position: absolute;
-                                right: 4px;
-                                top: 0;
-                                font-size: 13px;
-                                color: #717171;
-                                cursor: pointer;
-                            }
-                            
-                        }
-                    }
-                    #checkAll{
-                        position: absolute;
-                        top: 2px;
-                        right: 0;
-                        font-size: 13px;
-                        line-height: 13px;
-                        color: #797979;
-                        cursor: pointer;
-                    }
-                }
-                #searchHot{
-                    .title{
-                        margin-top: 4px;
-                        margin-bottom: 18px;
-                    }
-                    .hotItem{
-                        height: 50px;
-                        width: 100%;
-                        display: flex;
-                        .itemNo{
-                            width: 35px;
-                            height: 100%;
+                transition: all .5s;
+                .hot{
+                    width: 324px;
+                    padding: 16px;
+                    #searchHistory{
+                        position: relative;
+                        overflow: hidden;
+                        .deleteAllIcon{
                             padding-left: 4px;
-                            display: flex;
-                            justify-content: left;
-                            align-items: center;
+                            cursor: pointer;
                         }
-                        .hotItemBody{
+                        #historyBox{
+                            padding: 6px;
                             display: flex;
-                            flex-direction: column;
-                            align-items: flex-start;
-                            line-height: 25px;
+                            flex-wrap: wrap;
+                            justify-content:left;
+                            .historyItem{
+                                padding: 0px 16px;
+                                border: solid 1px #545454;
+                                line-height: 24px;
+                                margin-right: 10px;
+                                color: #d7d7d7;
+                                border-radius: 12px;
+                                font-size: 13px;
+                                margin-bottom: 7px;
+                                max-width: 100%;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                                position: relative;
+                                cursor: pointer;
+                                &:hover .deleteIcon{
+                                    display: block;
+                                }
+                                .deleteIcon{
+                                    display: none;
+                                    content: 'x';
+                                    position: absolute;
+                                    right: 4px;
+                                    top: 0;
+                                    font-size: 13px;
+                                    color: #717171;
+                                    cursor: pointer;
+                                }
+
+                            }
+                        }
+                        #checkAll{
+                            position: absolute;
+                            top: 2px;
+                            right: 0;
                             font-size: 13px;
-                            .up{
+                            line-height: 13px;
+                            color: #797979;
+                            cursor: pointer;
+                        }
+                    }
+                    #searchHot{
+                        .title{
+                            margin-top: 4px;
+                            margin-bottom: 18px;
+                        }
+                        .hotItem{
+                            height: 56px;
+                            width: 100%;
+                            display: flex;
+                            cursor: pointer;
+                            &:hover{
+                                background-color: #333333;
+                            }
+                            .itemNo{
+                                width: 35px;
+                                height: 100%;
+                                padding-left: 4px;
                                 display: flex;
+                                justify-content: left;
                                 align-items: center;
-                                .itemName,.itemHot,.itemPop{
-                                    margin-right: 4px;
-                                }
-                                .itemName{
-                                    color: #d7d7d7;
-                                }
-                                .itemPop{
-                                    font-size: 12px;
-                                    color: #5e5e5e;
-                                }
-                                .itemHot{
-                                    width: 24px;
-                                    .hotImg{
-                                        width: 100%;
+                            }
+                            .hotItemBody{
+                                display: flex;
+                                flex-direction: column;
+                                align-items: flex-start;
+                                font-size: 13px;
+                                .up{
+                                    display: flex;
+                                    align-items: center;
+                                    margin-top: 8px;
+                                    line-height: 20px;
+                                    .itemName,.itemHot,.itemPop{
+                                        margin-right: 4px;
+                                    }
+                                    .itemName{
+                                        color: #d7d7d7;
+                                    }
+                                    .itemPop{
+                                        font-size: 12px;
+                                        color: #5e5e5e;
+                                    }
+                                    .itemHot{
+                                        width: 24px;
+                                        .hotImg{
+                                            width: 100%;
+                                        }
                                     }
                                 }
+                                .bottom{
+                                    color: #737373;
+                                    line-height: 20px;
+                                }
                             }
-                            .bottom{
-                                color: #737373;
+                        }
+                        .hotItem:nth-child(2),.hotItem:nth-child(3),.hotItem:nth-child(4){
+                            .itemNo{
+                                color: #ff3a3a;
                             }
                         }
                     }
-                    .hotItem:nth-child(2),.hotItem:nth-child(3),.hotItem:nth-child(4){
-                        .itemNo{
-                            color: #ff3a3a;
-                        }
+                    .title{
+                        text-align: left;
+                        line-height: 16px;
+                        color: #8c8c8c;
+                        font-size: 14px;
                     }
                 }
-                .title{
+                .suggest{
+                    width: 360px;
                     text-align: left;
-                    line-height: 16px;
-                    color: #8c8c8c;
-                    font-size: 14px;
+                    padding-bottom: 15px;
+                    .title{
+                        padding-left: 36px;
+                        position: relative;
+                        color: #737373;
+                        font-size: 14px;
+                        line-height: 44px;
+                        .titleIcon{
+                            position: absolute;
+                            left: 12px;
+                        }
+                    }
+                    .suggestItem{
+                        padding-left: 36px;
+                        color: @black-font-color;
+                        font-size: 12px;
+                        line-height: 30px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        cursor: pointer;
+                        &:hover{
+                            background-color: #333333;
+                        }
+                        .slash{
+                            margin: 0 3px;
+                        }
+                        .Arname{
+                            margin-right: 4px;
+                        }
+                    }
                 }
             }
         }
@@ -398,6 +484,7 @@ watch(isSpreading,(newValue)=>{
                 border: none;
                 :deep(#ipt) {
                     background-color: transparent;
+                    color: @black-font-color;
                 }
             }
         }
