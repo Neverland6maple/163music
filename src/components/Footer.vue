@@ -4,7 +4,7 @@
       <div id="playerLeft" :class="{'reverse': isSpreading}" :style="{'opacity':songInfo.url  ? 1 : 0}">
         <div id="playerPageFn">
           <div class="fold"><DownOutlined @click="handleSpread(false)"/></div>
-          <div class="spreadFn"><HeartOutlined /></div>
+          <div class="spreadFn" @click="likeSong"><HeartOutlined v-if="!liked"/><HeartFilled style="color:#ec4141" class="likeIcon liked" v-else/></div>
           <div class="spreadFn"><FolderAddOutlined /></div>
           <div class="spreadFn"><DownloadOutlined /></div>
           <div class="spreadFn"><ShareAltOutlined /></div>
@@ -19,7 +19,7 @@
             <div class="songName">
               <div class="name">{{ songInfo.name }}</div>
               <div class="privilege"><vipIcon :style="{'display':songInfo.fee === 1 ? '' : 'none'}" /></div>
-              <div class="like"><HeartOutlined /></div>
+              <div class="like" @click="likeSong"><HeartOutlined v-if="!liked" /><HeartFilled style="color:#ec4141" class="likeIcon liked" v-else/></div>
             </div>
             <div class="songSinger">
               <template v-for="(item,index) in songInfo.ar" :key="item.id">
@@ -85,9 +85,9 @@
   </div>
 </template>
 <script>
-import { computed, defineComponent, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, defineComponent, nextTick, onMounted, ref, watch , getCurrentInstance} from 'vue';
 import {useStore} from 'vuex'
-import {PlayCircleFilled,AlignLeftOutlined,StepBackwardOutlined,StepForwardOutlined,PauseCircleFilled,CustomerServiceOutlined,FilterOutlined,TeamOutlined,MenuUnfoldOutlined,UpOutlined,DownOutlined,HeartOutlined,FolderAddOutlined,DownloadOutlined,ShareAltOutlined,RetweetOutlined,LoginOutlined,QuestionCircleOutlined,AudioMutedOutlined,} from '@ant-design/icons-vue'
+import {PlayCircleFilled,AlignLeftOutlined,StepBackwardOutlined,HeartFilled,StepForwardOutlined,PauseCircleFilled,CustomerServiceOutlined,FilterOutlined,TeamOutlined,MenuUnfoldOutlined,UpOutlined,DownOutlined,HeartOutlined,FolderAddOutlined,DownloadOutlined,ShareAltOutlined,RetweetOutlined,LoginOutlined,QuestionCircleOutlined,AudioMutedOutlined,} from '@ant-design/icons-vue'
 import timeFormat from '@/utils/timeFormat';
 import vipIcon from './icon/vip.vue';
 export default defineComponent({
@@ -111,6 +111,7 @@ export default defineComponent({
     LoginOutlined,
     QuestionCircleOutlined,
     AudioMutedOutlined,
+    HeartFilled,
     vipIcon,
   },
   props:{
@@ -132,6 +133,8 @@ export default defineComponent({
     const store = useStore();
     const isChanging = ref(false);
     const isHover = ref(false);
+    const {proxy:{$axios,$post}} = getCurrentInstance();
+    const likelist = computed(()=>store.state.user.likelist);
     const handleSpread = (value)=>{
       store.commit('changeIsSpreading',value)
       emit('spread');
@@ -157,6 +160,7 @@ export default defineComponent({
     const songInfo = computed(()=>{
       return store.state.player?.songInfo ?? {};
     })
+    const liked = computed(()=>likelist.value.has(songInfo.value.id))
     const getSongList = ()=>{
       store.commit('changeSlider',store.state.slider == 1 ? 0 : 1);
     }
@@ -167,6 +171,20 @@ export default defineComponent({
     const pause = ()=>{
       store.commit('player/changeIsPlaying',false);
       audio.value.pause();
+    }
+    const likeSong = async ()=>{
+      try{
+        const data = await $post(`/api/like?id=${songInfo.value.id}&like=${!liked.value}`)
+        if(data.code === 200){
+          if(liked.value){
+            store.commit('user/deleteLike',songInfo.value.id);
+          }else{
+            store.commit('user/addLike',songInfo.value.id);
+          }
+        }
+      }catch(e){
+        console.log(e);
+      }
     }
     let totalTime = ref("00:00");
     const currentTime = computed(()=>{
@@ -316,6 +334,8 @@ export default defineComponent({
       isHover,
       cancelMute,
       sequenceMap,
+      likeSong,
+      liked,
     }
   }
 })

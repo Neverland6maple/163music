@@ -1,6 +1,6 @@
 
 <template>
-    <div id="playerPage" :class="{'reverse': isSpreading}">
+    <div id="playerPage" :class="{'reverse': isSpreading}" ref="playerPageRef" @scroll="showScrollToTop">
         <div class="player-content-box">
             <div class="player">
                 <div id="gramophone">
@@ -32,13 +32,44 @@
                 </div>
             </div>
             <div class="lowerLevel">
-                <div class="commentBox">
+                <div class="commentListBox">
                     <commentList :total="total" :spinning="spinning" :hotComments="hotComments" :latestComments="latestComments" @handlePageChange="handlePageChange" ref="commentListRef"></commentList>
                 </div>
                 <div class="sideBar">
                     123
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <div class="commentMask" v-if="isShowCommentBox">
+        <div class="commentFrame">
+            <div class="title">歌曲：{{ songInfo.name }}</div>
+            <div class="ipt">
+                <div class="textarea">
+                    <a-textarea
+                    v-model:value="value"
+                    :auto-size="{ minRows: 6, maxRows: 6 }"
+                    placeholder="快来说点什么吧"
+                    />
+                </div>
+                <div class="textareaFn">
+                    <div class="textareaOption">
+                        <div>#</div>
+                        <div>@</div>
+                        <div>&#9786; &#65039;</div>
+                    </div>
+                    <div class="letterLimit">
+                        123
+                    </div>
+                </div>
+            </div>
+            <div class="commentBtn" @click="comment">
+                <a-button type="primary" shape="round" :size="size" :class="{'actived':value}">
+                    发布
+                </a-button>
+            </div>
+            <CloseOutlined class="closeIcon" @click="showCommentBox(false)"/>
         </div>
     </div>
 </template>
@@ -51,23 +82,28 @@ import lyricComponent from '@/components/player/lyric.vue'
 import commentList from './unit/commentList.vue';
 import vipIcon from '@/components/icon/vip.vue'
 import mvIcon from './icon/mv.vue';
-import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import { onBeforeRouteLeave, onBeforeRouteUpdate} from 'vue-router';
+import {CloseOutlined} from '@ant-design/icons-vue'
 const store = useStore();
 const time = ref(0);
 const spinning = ref(false);
+const playerPageRef = ref(null);
 const hotComments = ref([]);
 const latestComments = ref([]);
+const value = ref('');
 const total = ref(0);
 const commentListRef = ref(null);
 const {proxy:{$axios}} = getCurrentInstance();
 const isSpreading = computed(()=>store.state.isSpreading);
 const isPlaying = computed(()=>store.state.player.isPlaying);
 const songInfo = computed(()=>store.state.player.songInfo);
+const isShowCommentBox = ref(false);
+const emit = defineEmits(['showScrollToTop']);
 const getList = async (id,before,current)=>{
     spinning.value = true;
     const {data:res} = await $axios({
         method:'get',
-        url: `/api/comment/music?id=${id}&limit=20&offset=${20*(current-1)}&before=${before}`
+        url: `/api/comment/music?id=${id}&limit=20&offset=${20*(current-1)}&before=${before}&timestamp=${Date.now()}`
     })
     if(res.hotComments) hotComments.value = res.hotComments;
     latestComments.value = res.comments;
@@ -78,8 +114,30 @@ const getList = async (id,before,current)=>{
 const toAr = (id)=>{
     router.push(`/artist/${id}`);
 }
+const scrollToTop = ()=>{
+    playerPageRef.value.scrollTop = 0;
+}
 const handlePageChange = (page)=>{
     getList(songInfo.value.id,time.value,page);
+}
+const showScrollToTop = ()=>{
+    emit('showScrollToTop',playerPageRef.value.scrollTop > 400);
+}
+const showCommentBox = (value)=>{
+    isShowCommentBox.value = value;
+}
+const comment = async ()=>{
+    const data = await $axios({
+        method:"get",
+        url:`/api/comment?t=1&type=0&id=${songInfo.value.id}&content=${value.value}`
+    })
+    if(data.data.code === 200){
+        value.value = '';
+        showCommentBox(false);
+        await getList(songInfo.value.id,time.value,1);
+    }else{
+        console.log(data);
+    }
 }
 watch(()=>songInfo.value,(val)=>{
     if(commentListRef.value) commentListRef.value.reset();
@@ -87,6 +145,10 @@ watch(()=>songInfo.value,(val)=>{
 },{
     immediate:true,
     deep:true,
+})
+defineExpose({
+    scrollToTop,
+    showCommentBox,
 })
 </script>
 <style lang="less" scoped>
@@ -97,7 +159,7 @@ watch(()=>songInfo.value,(val)=>{
   left: 0;
   right: 0;
   bottom: 0;
-  height:inherit;
+  height: 100%;
   background-color: #2b2b2b;
   transform: translateY(100%);
   transition: all 0.3s linear;
@@ -108,7 +170,6 @@ watch(()=>songInfo.value,(val)=>{
   .player-content-box{
     min-width: 864px;
     max-width: 864px;
-    height: 100%;
     margin: 0 auto;
     .player{
         display: flex;
@@ -185,10 +246,9 @@ watch(()=>songInfo.value,(val)=>{
     .lowerLevel{
         width: 100%;
         margin: 0 auto;
-        height: 100px;
         display: flex;
         justify-content: space-around;
-        .commentBox{
+        .commentListBox{
             width: 560px;
             height: 100%;
         }
@@ -199,5 +259,112 @@ watch(()=>songInfo.value,(val)=>{
     }
     }
 }
+
+.commentMask{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .commentFrame{
+        width: 470px;
+        height: 300px;
+        border-radius: 4px;
+        box-shadow: 2px 2px 1px #282828;
+        background-color: #363636;
+        padding: 20px;
+        position: relative;
+        .title{
+            line-height: 50px;
+            color:@black-font-color;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .ipt{
+            padding: 8px 18px;
+            background-color: rgba(255, 255, 255, .1);
+            border-radius: 6px;
+        }
+
+        .textarea{
+            position: relative;
+            .ant-input{
+                border: 0;
+                background-color: transparent;
+                color: #d8d8d8;
+                padding: 0;
+                padding-top: 8px;
+                line-height: 16px;
+                font-size: 13px;
+                &::-webkit-input-placeholder{
+                    color: #696969;
+                }
+                &:-ms-input-placeholder { /* IE 10+ */
+                    color: #696969;
+                }
+                &:-moz-placeholder { /* Firefox 18- */
+                    color: #696969;
+                    opacity: 1;
+                }
+                &::-moz-placeholder { /* Firefox 19+ */
+                    color: #696969;
+                    opacity: 1;
+                }
+                &:focus{
+                   box-shadow: none;
+                }
+            }
+        }
+        .textareaFn{
+            height: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            .textareaOption{
+                display: flex;
+            }
+            
+            .letterLimit{
+                position: absolute;
+                right: 0;
+                bottom: 5px;
+                color: #616161;
+                font-size: 12px;
+            }
+        }
+        .commentBtn{
+            margin-top: 18px;
+            .ant-btn{
+                background-color: #903b3b;
+                padding: 0 50px;
+                height: 35px;
+                line-height: 35px;
+                color: #9a9a9a;
+                border: none;
+                transition: none;
+                &.actived{
+                    background-color: #ec4141;
+                    color: #ffffff;
+                    &:hover{
+                        background-color: #d73535;
+                    }
+                }
+            }
+        }
+        .closeIcon{
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            color: #737373;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    }
+}
+
 
 </style>

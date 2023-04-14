@@ -25,7 +25,7 @@
                 <div class="graphBox" v-for="(item,index) in albums" :key="item.id">
                     <div class="albumInfo">
                         <div class="cover">
-                            <img class="coverPic" :src="item.blurPicUrl" alt="">
+                            <router-link :to="`/album/${item.id}`"><img class="coverPic" :src="item.blurPicUrl" alt=""></router-link>
                         </div>
                         <div class="publishTime">{{ dateFormat(item.publishTime) }}</div>
                     </div>

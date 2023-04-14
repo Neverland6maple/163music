@@ -72,6 +72,12 @@ const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>
             .slash{
               margin: 0 4px;
             }
+            .likeIcon{
+              cursor: pointer;
+              &.liked:hover{
+                color: #d73535 !important;
+              }
+            }
             .album{
               overflow: hidden;
               text-overflow: ellipsis;

@@ -69,7 +69,8 @@ import TransparemtBtn from '../unit/TransparemtBtn.vue';
 import myTable from '@/components/unit/MyTable.vue';
 import albumComment from '@/components/album/albumComment.vue';
 import albumDescription from '@/components/album/albumDescription.vue';
-import {FolderAddOutlined ,DownloadOutlined,ShareAltOutlined,LoadingOutlined,HeartOutlined } from '@ant-design/icons-vue'
+import {FolderAddOutlined ,DownloadOutlined,ShareAltOutlined,LoadingOutlined,HeartOutlined,HeartFilled } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue';
 import Pop from '@/components/search/Pop.vue'
 import { getCurrentInstance, watch, reactive,ref,h,computed } from 'vue';
 import timeFormat from '@/utils/timeFormat';
@@ -81,7 +82,8 @@ import mvIcon from '@/components/icon/mv.vue'
 import vipIcon from '@/components/icon/vip.vue'
 import noCopyright from '../icon/noCopyright.vue';
 const spinning = ref(false);
-const {proxy:{$axios}} = getCurrentInstance();
+const {proxy:{$axios,$post}} = getCurrentInstance();
+const likelist = computed(()=>store.state.user.likelist);
 const columns = [
   {
     dataIndex: 'number',
@@ -90,6 +92,25 @@ const columns = [
   {
     dataIndex: 'like',
     width:'25px',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:async (event) => {
+          try{
+            const like = likelist.value.has(record.key) ? false : true;
+            const data = await $post(`/api/like?id=${record.key}&like=${like}`)
+            if(data.code === 200){
+              if(like){
+                store.commit('user/addLike',record.key);
+              }else{
+                store.commit('user/deleteLike',record.key);
+              }
+            }
+          }catch(e){
+            console.log(e);
+          }
+        }
+      }
+    },
   },
   {
     dataIndex: 'download',
@@ -133,7 +154,7 @@ const columns = [
       return {
         onClick:(event) => {
           if(record.album.props.albumId == albumId.value){
-            console.log('是同一张专辑');
+            message.info('是同一张专辑');
           }else{
             router.push(`/album/${record.album.props.albumId}`)
           }
@@ -184,11 +205,12 @@ const getList = async (id)=>{
       }
       content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
     });
+    const liked = likelist.value.has(item.id);
     dataSource.value.push({
       key: item.id,
       index,
       number:index+1,
-      like:<HeartOutlined/>,
+      like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
       download:<DownloadOutlined/>,
       song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
       singer: <div class="singer">{content}</div>,
@@ -222,6 +244,13 @@ watch(()=>route.params.albumId,(newValue)=>{
   getList(albumId.value);
 },{
   immediate:true
+})
+watch(likelist,val=>{
+  dataSource.value.forEach((item,index)=>{
+    item.like  = val.has(item.key) ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>;
+  })
+},{
+  deep:true
 })
 </script>
 <style lang="less" scoped>

@@ -60,6 +60,7 @@ const dataSource = ref([]);
 const store = useStore();
 const songList = computed(()=>store.state.player.songList);
 const playingIndex = computed(()=>store.state.player.playingIndex)
+console.log(songList.value);
 dataSource.value = songList.value.map((e,index)=>{
     const content = []
     console.log(e);
@@ -72,7 +73,7 @@ dataSource.value = songList.value.map((e,index)=>{
     return {
         id:e.id,
         index,
-        song:<div class="song">{e.name}<vipIcon style={e.fee === 1 ? '' : 'display:none'} /><mvIcon style={e.mv != 0 ? '' : 'display:none'} data-id={item.mv} /><noCopyright style={e.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+        song:<div class="song">{e.name}<vipIcon style={e.fee === 1 ? '' : 'display:none'} /><mvIcon style={e.mv != 0 ? '' : 'display:none'} data-id={e.mv} /><noCopyright style={e.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
         singer:<div class="singer">{content}</div>,
         share:<div class={'share'}><LinkOutlined /></div>,
         dt:<div class='dt'>{e.dt}</div>,

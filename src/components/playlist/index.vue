@@ -2,7 +2,7 @@
     <div id="playlist">
         <div id="playlistHead">
             <div id="playlistCover">
-                <img :src="`${playlist.coverImgUrl}?param=185y185`" alt="picUrl" id="playlistPic">
+                <img :src="`${playlist.coverImgUrl}?param=185y185`" alt="picUrl" id="playlistPic" v-if="playlist.coverImgUrl">
             </div>
             <div id="playlistInfos">
                 <div id="playlistName">
@@ -22,12 +22,12 @@
                 </div>
                 <div id="playlistFn">
                     <PlayAll></PlayAll>
-                   <TransparemtBtn>
+                   <TransparemtBtn @click="subscribe">
                     <template #icon>
                       <FolderAddOutlined/>
                     </template>
                     <template #content>
-                      收藏({{ playlist.subscribedCount }})
+                      {{playlist.subscribed ? '已收藏' : '收藏'}}({{ playlist.subscribedCount }})
                     </template>
                    </TransparemtBtn>
                    <TransparemtBtn>
@@ -91,7 +91,7 @@
 import PlayAll from '../unit/PlayAll.vue';
 import TransparemtBtn from '../unit/TransparemtBtn.vue';
 import myTable from '@/components/unit/MyTable.vue';
-import {FolderAddOutlined ,DownloadOutlined,HeartOutlined } from '@ant-design/icons-vue'
+import {FolderAddOutlined ,DownloadOutlined,HeartOutlined,HeartFilled } from '@ant-design/icons-vue'
 import Pop from '@/components/search/Pop.vue'
 import { getCurrentInstance, watch ,ref,h,computed } from 'vue';
 import timeFormat from '@/utils/timeFormat';
@@ -104,7 +104,13 @@ import albumComment from '../album/albumComment.vue';
 import dateFormat from '@/utils/dateFormat';
 import subscribers from '@/components/playlist/Subscribers.vue'
 const spinning = ref(false);
-const {proxy:{$axios}} = getCurrentInstance();
+const {proxy:{$axios,$post}} = getCurrentInstance();
+const props = defineProps({
+  like:{
+    type:Boolean,
+    required:false,
+  }
+})
 const columns = [
   {
     dataIndex: 'number',
@@ -113,6 +119,21 @@ const columns = [
   {
     dataIndex: 'like',
     width:'25px',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick:async (event) => {
+          const like = likelist.value.has(record.key) ? false : true;
+          const data = await $post(`/api/like?id=${record.key}&like=${like}`)
+          if(data.code === 200){
+            if(like){
+              store.commit('user/addLike',record.key);
+            }else{
+              store.commit('user/deleteLike',record.key);
+            }
+          }
+        }
+      }
+    },
   },
   {
     dataIndex: 'download',
@@ -156,7 +177,7 @@ const columns = [
       return {
         onClick:(event) => {
           if(record.album.props.playlistId == playlistId.value){
-            alert('是同一张专辑');
+            message.info('是同一张专辑');
           }else{
             router.push(`/album/${record.album.props.playlistId}`)
           }
@@ -184,20 +205,21 @@ const profile = computed(()=>store.state.user.profile);
 const playlist = ref({tags:[]});
 const playlistId = ref(null);
 const activeKey = ref('1');
+const likelist = computed(()=>store.state.user.likelist);
 let songList = [];
 const isCreator = computed(()=>profile.value.userId === creator.value.userId)
 const getList = async (id)=>{
   spinning.value = true;
   const {data:res1} = await $axios({
     method:'get',
-    url:`/api/playlist/detail?id=${id}`,
+    url:`/api/playlist/detail?id=${id}&timestamp=${Date.now()}`,
   });
   creator.value = res1.playlist.creator;
   playlist.value = res1.playlist;
   const limit = res1.playlist.trackCount > 1000 ? 1000 : res1.playlist.trackCount;
   const {data:res} = await $axios({
     method:'get',
-    url:`/api/playlist/track/all?id=${id}&limit=${1000}&offset=0`,
+    url:`/api/playlist/track/all?id=${id}&limit=${1000}&offset=0&timestamp=${Date.now()}`,
   });
   
   dataSource.value = [];
@@ -211,22 +233,24 @@ const getList = async (id)=>{
       }
       content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
     });
+    const liked = likelist.value.has(item.id);
     dataSource.value.push({
       key: item.id,
       index,
       number:index+1,
-      like:<HeartOutlined/>,
+      like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
       download:<DownloadOutlined/>,
       song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
       singer: <div class="singer">{content}</div>,
       album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
       dt:<div class='dt'>{timeFormat(item.dt)}</div>,
       pop:<Pop>{item.pop}</Pop>,
+      liked,
       })
       songList.push({
         id:item.id,
         name:item.name,
-        singer:item.ar[0].name,
+        singer:item.ar,
         dt:timeFormat(item.dt),
         fee:item.fee,
         noCopyrightRcmd:item.noCopyrightRcmd,
@@ -249,11 +273,70 @@ const playCount = computed(()=>{
     }
     return playlist.value.playCount;
 })
+const subscribe = ()=>{
+  const t = playlist.value.subscribed ? '2' : '1';
+  $post(`/api/playlist/subscribe?t=${t}&id=${playlistId.value}`);
+  getList(playlistId.value);
+}
 watch(()=>route.params.playlistId,(newValue)=>{
   playlistId.value = newValue;
   getList(playlistId.value);
 },{
   immediate:true
+})
+watch(likelist,async (newVal,oldVal)=>{
+  const uset = new Set(newVal);
+  console.log('diao yong');
+  if(props.like){
+    for(let i = 0;i<dataSource.value.length;i++){
+      // 找不到key 要删掉
+
+      if(!uset.has(dataSource.value[i].key)){
+        dataSource.value.splice(i,1);
+        i--;
+      }else{
+        uset.delete(dataSource.value[i].key);
+      }
+    }
+
+    if(uset.size){
+      const arr = Array.from(uset);
+      for(let i = 0;i<arr.length;i++){
+        const {data:res} = await $axios(`/api/song/detail?ids=${arr[i]}`);
+        const item = res.songs[0];
+        const content = []
+        item.ar.forEach((el,index)=>{
+          if(index > 0){
+            content.push(<span class="slash">/</span>);
+          }
+          content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
+        });
+        dataSource.value.unshift({
+          key: item.id,
+          index:i,
+          number:i+1,
+          like:<HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/>,
+          download:<DownloadOutlined/>,
+          song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+          singer: <div class="singer">{content}</div>,
+          album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
+          dt:<div class='dt'>{timeFormat(item.dt)}</div>,
+          pop:<Pop>{item.pop}</Pop>,
+          liked:true,
+        })
+      }
+    }
+    dataSource.value.forEach((item,index)=>{
+      item.index = index;
+      item.number = index + 1;
+    })
+  }else{
+    dataSource.value.forEach((item,index)=>{
+      item.like  = newVal.has(item.key) ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>;
+    })
+  }
+},{
+  deep:true
 })
 </script>
 <style lang="less" scoped>

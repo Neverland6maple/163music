@@ -7,7 +7,7 @@ export default (date,cn)=>{
     if(cn){
         const hour = obj.getHours();
         const min = obj.getMinutes();
-        return `${y}年${padStart(m)}月${padStart(d)}日 ${padStart(hour)}:${padStart(min)}}`
+        return `${y}年${padStart(m)}月${padStart(d)}日 ${padStart(hour)}:${padStart(min)}`
     }
     return `${y}-${padStart(m)}-${padStart(d)}`
 }

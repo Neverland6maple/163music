@@ -2,6 +2,7 @@ export default {
     namespaced:true,
     state:{
         profile:JSON.parse(localStorage.getItem('profile')) || {},
+        likelist:new Set(JSON.parse(localStorage.getItem('likelist'))) || new Set(), 
     },
     getters:{
         islogin(){
@@ -12,6 +13,18 @@ export default {
         setProfile(state,value){
             state.profile = value;
             localStorage.setItem('profile',JSON.stringify(value));
+        },
+        setLikelist(state,value){
+            state.likelist = new Set(value);
+            localStorage.setItem('likelist',JSON.stringify(value));
+        },
+        deleteLike(state,value){
+            state.likelist.delete(value);
+            localStorage.setItem('likelist',JSON.stringify(Array.from(state.likelist)));
+        },
+        addLike(state,value){
+            state.likelist.add(value);
+            localStorage.setItem('likelist',JSON.stringify(Array.from(state.likelist)));
         }
     },
     actions:{

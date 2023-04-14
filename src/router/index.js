@@ -28,7 +28,8 @@ const routes = [
   },{
     name:'Playlist',
     path:'/Playlist/:playlistId',
-    component:()=>import('@/components/playlist/index.vue')
+    component:()=>import('@/components/playlist/index.vue'),
+    props:route => ({like:route.query.like})
   },{
     name:'User',
     path:'/u/:userId',

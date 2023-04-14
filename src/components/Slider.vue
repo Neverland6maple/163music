@@ -15,7 +15,7 @@
       <a-menu-item key="6">私人FM</a-menu-item>
 
       <a-menu-item-group key="g2" title="我的音乐">
-        <a-menu-item key="7" @click="toPlaylist(item.id)"><heart-outlined class="sliderIcon"/>我喜欢的音乐</a-menu-item>
+        <a-menu-item key="7" @click="toPlaylist(myLikes.id,true)"><heart-outlined class="sliderIcon"/>我喜欢的音乐</a-menu-item>
         <a-menu-item key="9"><download-outlined class="sliderIcon"/>本地与下载</a-menu-item>
         <a-menu-item key="10"><field-time-outlined class="sliderIcon"/>最近播放</a-menu-item>
         <a-menu-item key="11" v-if="islogin"><cloud-outlined class="sliderIcon"/>我的音乐云盘</a-menu-item>
@@ -56,8 +56,12 @@ const handleClick = e => {
 const titleClick = e => {
   // console.log('titleClick', e);
 };
-const toPlaylist = (id)=>{
-  router.push(`/playlist/${id}`)
+const toPlaylist = (id,like)=>{
+  if(like){
+    router.push(`/playlist/${id}?like=true`);
+  }else{
+    router.push(`/playlist/${id}`);
+  }
 }
 const getPlaylist = async ()=>{
     const {data:res} = await $axios({

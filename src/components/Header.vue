@@ -90,9 +90,9 @@
                 <li>
                     <SettingOutlined />
                 </li>
-                <li id="userMessage">
+                <li id="userMessage" @click="showMsg">
                     <MailOutlined />
-                    <div id="messageCount">99+</div>
+                    <div id="messageCount">{{newMsgCount}}+</div>
                 </li>
                 <li>
                     <ExpandOutlined />
@@ -144,6 +144,7 @@ const isSearching = ref(false);
 const subnavRef = ref(null);
 const hotItem = ref([]);
 const suggestList = ref([]);
+const newMsgCount = ref(0);
 const suggestObj = ref({
     'songs':'单曲',
     'artists':'歌手',
@@ -211,6 +212,9 @@ const handleDelete = (index,e)=>{
 const handleDeleteAll = ()=>{
     store.commit('history/deleteSearchHistoryAll');
 }
+const showMsg = ()=>{
+    store.commit('changeSlider',2);
+}
 const getSuggest = debounce(async (key)=>{
     const {data:res} = await $axios({
         method:'get',
@@ -221,6 +225,16 @@ const getSuggest = debounce(async (key)=>{
 watch(()=>route.query.from,val=>{
     store.commit('changeLoginShow',true)
 })
+const getMsg = async ()=>{
+    const {data:res} = await $axios({
+        method:'get',
+        url:`/api/msg/private`
+    })
+    if(res.code === 200){
+        newMsgCount.value = res.newMsgCount;
+    }
+}
+getMsg();
 watch(isSpreading,(newValue)=>{
     if(newValue){
         setTimeout(()=>{

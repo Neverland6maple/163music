@@ -26,7 +26,7 @@
             <div  v-show="!refresh">
                 <div class="graphBox" v-for="(item,index) in graphPlaylist" :key="item.id">
                     <div class="cover" @click="toPlaylist(item.id)">
-                        <img class="coverPic" :src="item.coverImgUrl" alt="">
+                        <router-link :to="`/playlist/${item.id}`"><img class="coverPic" :src="item.coverImgUrl" alt=""></router-link>
                     </div>
                     <div class="list">
                         <h2 class="title">{{  item.name }}</h2>

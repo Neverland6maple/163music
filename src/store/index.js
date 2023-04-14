@@ -5,7 +5,7 @@ import user from './user';
 export default createStore({
   state:{
     isSpreading:false,
-    slider:0, // 0为不展示，1为播放列表，2为消息,
+    slider:2, // 0为不展示，1为播放列表，2为消息,
     loginShow:false,
     isCover:false,
   },

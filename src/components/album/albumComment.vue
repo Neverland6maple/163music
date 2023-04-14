@@ -16,7 +16,7 @@
                     <div>@</div>
                     <div>&#9786; &#65039;</div>
                 </div>
-                <div class="commentBtn">
+                <div class="commentBtn" @click="comment">
                     <TransparemtBtn :styleObj="{'padding':'0 14px'}">
                         <template #content>评论</template>
                     </TransparemtBtn>
@@ -55,9 +55,8 @@ const getLatestComments = async (id,pageNo)=>{
     spinning.value = true;
     const {data:res} = await $axios({
         method:'get',
-        url:`/api/comment/new?type=${props.type}&id=${id}&pageSize=30&pageNo=${pageNo}&sortType=3&cursor=${cursor.value}`,
+        url:`/api/comment/new?type=${props.type}&id=${id}&pageSize=30&pageNo=${pageNo}&sortType=3&cursor=${cursor.value}&timestamp=${Date.now()}`,
     })
-    console.log(res.data);
     latestComment.value = res.data.comments;
     total.value = res.data.totalCount;
     cursor.value = res.data.cursor;
@@ -66,6 +65,16 @@ const getLatestComments = async (id,pageNo)=>{
 const handlePageChange = async (newPage)=>{
     current.value = newPage;
     await getLatestComments(props.id,newPage);
+}
+const comment = async ()=>{
+    const data = await $axios({
+        method:"get",
+        url:`/api/comment?t=1&type=${props.type}&id=${props.id}&content=${value.value}`
+    })
+    if(data.data.code === 200){
+        value.value = '';
+        getLatestComments(props.id,1);
+    }
 }
 getHotList(props.id);
 getLatestComments(props.id,current.value);
