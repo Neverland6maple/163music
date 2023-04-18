@@ -32,6 +32,7 @@
         <!-- footer -->
         <a-layout-footer v-if="isCover === false"><myFooter :skipTime="skipTime" a="1"></myFooter></a-layout-footer>
     </a-layout>
+    <TableMenu></TableMenu>
   </div>
 </template>
 <script>
@@ -45,9 +46,10 @@ import PlayerPage from './components/PlayerPage.vue'
 import SongList from '@/components/songList/SongList.vue'
 import Login from '@/components/Login.vue'
 import Msg from './components/Msg.vue'
+import TableMenu from './components/unit/TableMenu.vue'
 import { VerticalAlignTopOutlined} from '@ant-design/icons-vue'
 export default {
-  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList , Login , VerticalAlignTopOutlined ,Msg },
+  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList , Login , VerticalAlignTopOutlined ,Msg,TableMenu },
   setup(){
     const store = useStore();
     const slider = computed(()=>store.state.slider);

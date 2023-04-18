@@ -16,7 +16,9 @@
             :data-source="dataSource"
             :pagination=false
             :customRow="customRow"
-            :rowClassName="(record, index) => (index % 2 === 0 ? 'table-striped' : null,index === playingIndex ? 'playingItem' : 'abc')"
+            :rowClassName="(record, index) => {
+                return [index === playingIndex ? 'playingItem' : 'abc',index % 2 === 1 ? 'table-striped' : null]
+            }"
             />
         </div>
     </div>
@@ -60,10 +62,8 @@ const dataSource = ref([]);
 const store = useStore();
 const songList = computed(()=>store.state.player.songList);
 const playingIndex = computed(()=>store.state.player.playingIndex)
-console.log(songList.value);
 dataSource.value = songList.value.map((e,index)=>{
     const content = []
-    console.log(e);
     e.singer.forEach((el,index)=>{
       if(index > 0){
         content.push(<span class="slash">/</span>);
@@ -147,11 +147,9 @@ onUnmounted(()=>{
                 width: 240px;
                 color: #5e5e5e;
             }
-            .songListCollect{
-
-            }
             .songListClear{
                 color: #739bbd;
+                cursor: pointer;
             }
         }
     }
@@ -179,33 +177,6 @@ onUnmounted(()=>{
                     top: 12px;
                 }
             } 
-            .song{
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-              display: flex;
-              align-items: center;
-              justify-content:left;
-              .vipIcon,mvIcon,noCopyrightIcon{
-                margin-left: 1px;
-              }
-            }
-            .singer{
-              cursor: pointer;
-              color: #999;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-              .singerName{
-                transition: none;
-              }
-              .singerName:hover{
-                color: #b1b9b9;
-              }
-            }
-            .dt{
-              color: #999;
-            }
             .ant-table-cell{
                 background-color: transparent;
                 border-bottom: 0;
@@ -221,31 +192,50 @@ onUnmounted(()=>{
                     text-overflow: ellipsis;
                     white-space:nowrap;   
                 }
-                .name{
-                    width: 200px;
+                .song{
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  display: flex;
+                  align-items: center;
+                  justify-content:left;
+                  width: 200px;
+                  .vipIcon,mvIcon,noCopyrightIcon{
+                    margin-left: 1px;
+                  }
                 }
                 .singer{
                     width: 88px;
                     margin-right: 10px;
+                    color: #919191;
+                    cursor: pointer;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    .singerName{
+                      transition: none;
+                      color: #919191;
+                    }
                 }
                 .share{
                     margin-right: 15px;
                 }
                 .dt{
                     width: 70px;
+                    color: #999;
                 }
             }
             .table-striped td {
-                background-color: #2f2f2f;
+                background-color: #3a3a3a;
             }
             tr:hover {
                 .dt,.song{
-                    background-color: #373737;
                     color: white;
                 }
                 .singer .singerName,.slash{
                     color: white;
                 }
+                background-color: #3e3e3e;
             }
             tr td:first-child{
                 padding-left: 16px;

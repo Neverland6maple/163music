@@ -68,15 +68,19 @@ const getPlaylist = async ()=>{
       method:'get',
       url:`/api/user/playlist?uid=${profile.value.userId}`
     })
+    const userPlaylist = [];
     const playlist = res.playlist;
     myLikes.value = playlist[0];
+    userPlaylist.push(playlist[0]);
     for(let i = 1;i<playlist.length;i++){
       if(playlist[i].creator.userId === profile.value.userId){
         userCreators.value.push(playlist[i]);
+        userPlaylist.push(playlist[i]);
       }else{
         userCollections.value.push(playlist[i]);
       }
     }
+    store.commit('user/setPlaylist',userPlaylist);
 };
 watch(islogin,(newVal)=>{
   if(newVal){

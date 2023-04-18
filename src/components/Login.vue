@@ -50,21 +50,21 @@ const login = async ()=>{
                 method:'get',
                 url:`/api/login/qr/check?key=${unikey}&timerstamp=${Date.now()}`,
             })
+            console.log(res3);
             if(res3.code === 802){
                 showCom.value = ScanAfter;
-            }
-            console.log(res3);
-            if (res3.code === 800) {
+            }else if (res3.code === 800) {
               alert('二维码已过期,请重新获取')
               clearInterval(timer)
-            }
-            if (res3.code === 803) {
+            }else if (res3.code === 803) {
               // 这一步会返回cookie
               alert('授权登录成功');
               localStorage.setItem('cookie', res3.cookie);
               await getLoginStatus();
               exit();
-              router.push(JSON.parse(route.query.from))
+              if(route.query.from){
+                router.push(JSON.parse())
+              }
             }
         }, 3000);
     }

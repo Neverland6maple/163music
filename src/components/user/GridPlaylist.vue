@@ -1,8 +1,8 @@
 <template>
     <div id="gridPlaylist">
         <div v-if="type == 0" class="gridContent">
-            <div class="gridBox" v-for="(item) in playlist" :key="item.id">
-                <div class="cover" @click="toPlaylist(item.id)">
+            <div class="gridBox" v-for="(item,index) in playlist" :key="item.id">
+                <div class="cover" @click="toPlaylist(item.id,index === 0)">
                     <img class="coverPic" :src="item.coverImgUrl" alt="">
                     <PlayCircleFilled />
                 </div>
@@ -11,8 +11,8 @@
             </div>
         </div>
         <div v-else-if="type == 1" class="rowContent">
-            <div class="row" v-for="(item) in playlist" :key="item.id">
-                <div class="cover" @click="toPlaylist(item.id)">
+            <div class="row" v-for="(item,index) in playlist" :key="item.id">
+                <div class="cover" @click="toPlaylist(item.id,index === 0)">
                     <img class="coverPic" :src="item.coverImgUrl" alt="">
                 </div>
                 <h3 class="title" @click="toPlaylist(item.id)">{{ item.name }}</h3>
@@ -26,7 +26,7 @@
             <div  v-show="!refresh">
                 <div class="graphBox" v-for="(item,index) in graphPlaylist" :key="item.id">
                     <div class="cover" @click="toPlaylist(item.id)">
-                        <router-link :to="`/playlist/${item.id}`"><img class="coverPic" :src="item.coverImgUrl" alt=""></router-link>
+                        <router-link :to="`/playlist/${item.id}` + index === 0 ? '&like=true' : ''"><img class="coverPic" :src="item.coverImgUrl" alt=""></router-link>
                     </div>
                     <div class="list">
                         <h2 class="title">{{  item.name }}</h2>
@@ -160,8 +160,12 @@ const handlePageChange = (newPage)=>{
         refresh.value = false
     },0)
 }
-const toPlaylist = (id)=>{
-    router.push(`/playlist/${id}`)
+const toPlaylist = (id,like)=>{
+    if(like){
+        router.push(`/playlist/${id}?like=true`)
+    }else{
+        router.push(`/playlist/${id}`)
+    }
 }
 watchEffect(()=>{
     if(props.playlist){

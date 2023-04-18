@@ -2,7 +2,8 @@ export default {
     namespaced:true,
     state:{
         profile:JSON.parse(localStorage.getItem('profile')) || {},
-        likelist:new Set(JSON.parse(localStorage.getItem('likelist'))) || new Set(), 
+        likelist:new Set(JSON.parse(localStorage.getItem('likelist'))) || new Set(),
+        playlist:[],
     },
     getters:{
         islogin(){
@@ -25,6 +26,9 @@ export default {
         addLike(state,value){
             state.likelist.add(value);
             localStorage.setItem('likelist',JSON.stringify(Array.from(state.likelist)));
+        },
+        setPlaylist(state,value){
+            state.playlist = value;
         }
     },
     actions:{

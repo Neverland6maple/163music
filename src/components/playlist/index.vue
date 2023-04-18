@@ -80,6 +80,14 @@
                     <a-tab-pane key="2" :tab="`评论(${playlist.commentCount})`"></a-tab-pane>
                     <a-tab-pane key="3" tab="收藏者"></a-tab-pane>
                 </a-tabs>
+                <!-- <input type="text" v-model="value" style="background-color:black"  > -->
+                <div class="tableSearch">
+                  <input type="text" v-model="value" class="searchIpt" placeholder="搜索歌单音乐" @keydown="filterDataDB">
+                  <div class="modifier">
+                    <span v-if="value.length > 0" style="cursor: pointer;" @click="{value = '';rovoke();}">×</span>
+                    <FileSearchOutlined v-else/>
+                  </div>
+                </div>
             </div>
             <myTable :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong" :spinning="spinning" v-if="activeKey === '1'" :pagination=false></myTable>
             <albumComment v-else-if="activeKey === '2'" :id="playlistId" :type=2></albumComment>
@@ -91,19 +99,22 @@
 import PlayAll from '../unit/PlayAll.vue';
 import TransparemtBtn from '../unit/TransparemtBtn.vue';
 import myTable from '@/components/unit/MyTable.vue';
-import {FolderAddOutlined ,DownloadOutlined,HeartOutlined,HeartFilled } from '@ant-design/icons-vue'
+import {FolderAddOutlined ,DownloadOutlined,HeartOutlined,HeartFilled,FileSearchOutlined } from '@ant-design/icons-vue'
 import Pop from '@/components/search/Pop.vue'
 import { getCurrentInstance, watch ,ref,h,computed } from 'vue';
 import timeFormat from '@/utils/timeFormat';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
+import TableMenu from '@/components/unit/TableMenu.vue'
 import mvIcon from '@/components/icon/mv.vue'
 import vipIcon from '@/components/icon/vip.vue'
 import noCopyright from '../icon/noCopyright.vue';
 import albumComment from '../album/albumComment.vue';
 import dateFormat from '@/utils/dateFormat';
-import subscribers from '@/components/playlist/Subscribers.vue'
+import subscribers from '@/components/playlist/Subscribers.vue';
+import debounce from '@/utils/debounce';
 const spinning = ref(false);
+const value = ref('')
 const {proxy:{$axios,$post}} = getCurrentInstance();
 const props = defineProps({
   like:{
@@ -138,11 +149,26 @@ const columns = [
   {
     dataIndex: 'download',
     width:'25px',
+    customCell : (record,rowIndex) => {
+      return {
+        onClick: async (event) => {
+          const {data:res1} = await $axios({
+            method:'get',
+            url:`/api/song/detail?ids=${record.key}`
+          })
+          const {data:res} = await $axios({
+            method:'get',
+            url:`/api/song/download/url?id=${record.key}&br=${res1.songs[0].m.br}`
+          })
+          console.log(res);
+        }
+      }
+    },
   },
   {
     title: '音乐标题',
     dataIndex: 'song',
-    width:'38%',
+    width:'40%',
     customCell : (record,rowIndex) => {
       return {
         onClick:(event) => {
@@ -153,11 +179,15 @@ const columns = [
         }
       }
     },
+    sorter:(a,b)=>{
+      return a.song.children[0].children < b.song.children[0].children
+    },
   },
   {
     title: '歌手',
     dataIndex: 'singer',
-    width:'16%',
+    width:'19%',
+    ellipsis:true,
     customCell : (record,rowIndex) => {
       return {
         onClick:(event) => {
@@ -167,12 +197,15 @@ const columns = [
           }
         }
       }
-    }
+    },
+    sorter:(a,b)=>{
+      return a.song.children[0].children < b.song.children[0].children
+    },
   },
   {
     title: '专辑',
     dataIndex: 'album',
-    width:'19%',
+    width:'26%',
     customCell : (record,rowIndex) => {
       return {
         onClick:(event) => {
@@ -183,16 +216,18 @@ const columns = [
           }
         }
       }
-    }
+    },
+    sorter:(a,b)=>{
+      return a.song.children[0].children < b.song.children[0].children
+    },
   },
   {
     title: '时长',
     dataIndex: 'dt',
-    width:'8%'
-  },
-  {
-    title: '热度',
-    dataIndex: 'pop',
+    width:'10%',
+    sorter: (a, b) => {
+      return b.dt.props.dt - a.dt.props.dt;
+    },
   },
 ];
 const creator = ref({});
@@ -207,7 +242,8 @@ const playlistId = ref(null);
 const activeKey = ref('1');
 const likelist = computed(()=>store.state.user.likelist);
 let songList = [];
-const isCreator = computed(()=>profile.value.userId === creator.value.userId)
+const isCreator = computed(()=>profile.value.userId === creator.value.userId);
+let dataSourceOrig;
 const getList = async (id)=>{
   spinning.value = true;
   const {data:res1} = await $axios({
@@ -219,7 +255,7 @@ const getList = async (id)=>{
   const limit = res1.playlist.trackCount > 1000 ? 1000 : res1.playlist.trackCount;
   const {data:res} = await $axios({
     method:'get',
-    url:`/api/playlist/track/all?id=${id}&limit=${1000}&offset=0&timestamp=${Date.now()}`,
+    url:`/api/playlist/track/all?id=${id}&limit=${limit}&offset=0&timestamp=${Date.now()}`,
   });
   
   dataSource.value = [];
@@ -239,23 +275,23 @@ const getList = async (id)=>{
       index,
       number:index+1,
       like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
-      download:<DownloadOutlined/>,
+      download:<DownloadOutlined class={'downloadIcon'}/>,
       song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
       singer: <div class="singer">{content}</div>,
       album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
-      dt:<div class='dt'>{timeFormat(item.dt)}</div>,
-      pop:<Pop>{item.pop}</Pop>,
+      dt:<div class='dt' dt={item.dt} >{timeFormat(item.dt)}</div>,
       liked,
-      })
-      songList.push({
-        id:item.id,
-        name:item.name,
-        singer:item.ar,
-        dt:timeFormat(item.dt),
-        fee:item.fee,
-        noCopyrightRcmd:item.noCopyrightRcmd,
-        mv:item.mv,
-      })
+    })
+    dataSourceOrig = dataSource.value;
+    songList.push({
+      id:item.id,
+      name:item.name,
+      singer:item.ar,
+      dt:timeFormat(item.dt),
+      fee:item.fee,
+      noCopyrightRcmd:item.noCopyrightRcmd,
+      mv:item.mv,
+    })
   })
   spinning.value = false;
 }
@@ -278,6 +314,129 @@ const subscribe = ()=>{
   $post(`/api/playlist/subscribe?t=${t}&id=${playlistId.value}`);
   getList(playlistId.value);
 }
+const filterData = ()=>{
+  revoke();
+  dataSource.value = dataSource.value.filter(e=>{
+    // 发现revoke之后text节点全都变成了字符串，故重写此方法
+    // const resSong = e.song.children[0].children.includes(value.value);
+    // const resAlbum = e.album.children[0].children.includes(value.value);
+    // let resSinger = false; 
+
+    // for(let i = 0;i<e.singer.children[0].children.length;i+=2){
+    //   if(e.singer.children[0].children[i].children[0].children.includes(value.value)){
+    //     resSinger = true;
+    //     break;
+    //   }
+    // }
+
+    // if(resSong){
+    //   e.song = <div class={'song'}>{highlight(e.song.children[0].el.data,value.value)}{...e.song.children.slice(1)}</div>;
+    // }
+    // if(resSinger){
+    //   const content = []
+    //   e.singer.children[0].children.forEach((el,index)=>{
+    //     if(index % 2 === 1){
+    //       content.push(el);
+    //     }else{
+    //       content.push(<router-link to={el.props.to} class='singerName' singerId={el.props.singerId}>{(highlight(el.children[0].children,value.value))}</router-link>);
+    //     }
+    //   });
+    //   e.singer = <div class={'singer'}>{content}</div>
+    // }
+    // if(resAlbum){
+    //   e.album = <div class={'album'} playlistId={e.album.props.playlistId}>{highlight(e.album.children[0].el.data,value.value)}</div>;
+    // }
+    // return resSong || resSinger || resAlbum;
+
+    const resSong = e.song.children[0].toLowerCase().includes(value.value.toLowerCase());
+    const resAlbum = e.album.children[0].toLowerCase().includes(value.value.toLowerCase());
+    let resSinger = false; 
+    for(let i = 0;i<e.singer.children[0].length;i+=2){
+      if(e.singer.children[0][i].children[0].toLowerCase().includes(value.value.toLowerCase())){
+        resSinger = true;
+        break;
+      }
+    }
+
+    if(resSong){
+      e.song = <div class={'song'}>{highlight(e.song.children[0],value.value)}{...e.song.children.slice(1)}</div>;
+    }
+    if(resSinger){
+      const content = []
+      e.singer.children[0].forEach((el,index)=>{
+        if(index % 2 === 1){
+          content.push(el);
+        }else{
+          content.push(<router-link to={el.props.to} class='singerName' singerId={el.props.singerId}>{(highlight(el.children[0],value.value))}</router-link>);
+        }
+      });
+      e.singer = <div class={'singer'}>{content}</div>
+    }
+    if(resAlbum){
+      e.album = <div class={'album'} playlistId={e.album.props.playlistId}>{highlight(e.album.children[0],value.value)}</div>;
+    }
+    return resSong || resSinger || resAlbum;
+  })
+}
+const filterDataDB = debounce(filterData,200);
+const highlight = (data,key)=>{
+  const arr = data.toLowerCase().split(key.toLowerCase());
+  const content = [];
+  console.log(arr);
+  let index1 = 0,index2 = 0;
+
+  for(let i = 0;i<arr.length;i++){
+    if(arr[i] === ''){
+      index1 = data.toLowerCase().indexOf(key.toLowerCase(),index1);
+      content.push(<mark>{data.slice(index1,index1+key.length)}</mark>);
+      index1 += key.length;
+      continue;
+    }else{
+      index2 = data.toLowerCase().indexOf(arr[i],index2);
+      content.push(data.slice(index2,index2+arr[i].length));
+      index2 += arr[i].length;
+    }
+    if(i !== arr.length-1){
+      index1 = data.toLowerCase().indexOf(key.toLowerCase(),index1);
+      content.push(<mark>{data.slice(index1,index1+key.length)}</mark>);
+      index1 += key.length;
+    }
+  }
+  return content
+}
+
+const revoke = ()=>{
+  dataSource.value.forEach(e=>{
+    e.song = <div class={'song'}>{unHighlight(e.song.children[0])}{...e.song.children.slice(1)}</div>
+    e.album = <div class={'album'}>{unHighlight(e.album.children[0])}</div>
+    const content = [];
+    e.singer.children[0].children.forEach((el,index)=>{
+      if(index % 2 === 1){
+        content.push(el);
+      }else{
+        content.push(<router-link to={el.props.to} class='singerName' singerId={el.props.singerId}>{(unHighlight(el.children[0]))}</router-link>);
+      }
+    });
+    e.singer = <div class={'singer'}>{content}</div>
+  })
+  dataSource.value = dataSourceOrig;
+}
+
+const unHighlight = (data)=>{
+  if(data.type.description === 'Fragment'){
+    let str = '';
+    for(let i = 0;i<data.children.length;i++){
+      if(data.children[i].type === 'mark'){
+        str += data.children[i].children[0].children;
+      }else{
+        str += data.children[i].children;
+      }
+    }
+    return str;
+  }
+  return data.children;
+}
+
 watch(()=>route.params.playlistId,(newValue)=>{
   playlistId.value = newValue;
   getList(playlistId.value);
@@ -286,11 +445,9 @@ watch(()=>route.params.playlistId,(newValue)=>{
 })
 watch(likelist,async (newVal,oldVal)=>{
   const uset = new Set(newVal);
-  console.log('diao yong');
   if(props.like){
     for(let i = 0;i<dataSource.value.length;i++){
       // 找不到key 要删掉
-
       if(!uset.has(dataSource.value[i].key)){
         dataSource.value.splice(i,1);
         i--;
@@ -458,6 +615,7 @@ watch(likelist,async (newVal,oldVal)=>{
         #playlistTab{
             margin-left: 32px;
             margin-top: 0px;
+            position: relative;
             :deep(.ant-tabs-nav){
                 margin-bottom: 6px;
             }
@@ -504,6 +662,33 @@ watch(likelist,async (newVal,oldVal)=>{
                     font-size: 15px;
                     transition: 0s;
                 }
+            }
+            .tableSearch{
+              position: absolute;
+              right: 40px;
+              top: 16px;
+              height: 20px;
+              background-color: #323232;
+              border-radius: 10px;
+              padding-left: 10px;
+              padding-right: 20px;
+              .searchIpt{
+                background-color: transparent;
+                outline: none;
+                border: none;
+                font-size: 12px;
+                color:@black-font-color;
+                line-height: 20px;
+              }
+              .modifier{
+                position: absolute;
+                right: 10px;
+                top: 2px;
+                color: #adadad;
+                .anticon{
+                  font-size: 12px;
+                }
+              }
             }
         }
     }

@@ -1,5 +1,5 @@
 <template>
-    <div id="msgBox">
+    <div id="msgBox" ref="msgBoxRef">
         <div v-if="!showDialog" style="height: 100%;">
             <div class="hd">
                 <div class="title">消息</div>
@@ -17,7 +17,7 @@
                 <div class="quickRead">一件已读</div>
             </div>
             <div class="list">
-                <div class="listItem" v-for="(item,index) in msgs" :key="index" @click="toDialog(item.fromUser.userId)">
+                <div class="listItem" v-for="(item,index) in msgs" :key="index" @click="toDialog(item.fromUser)">
                     <div class="newTag" v-if="item.user.newMsgCount > 0"></div>
                     <div class="userPic">
                         <img :src="item.fromUser.avatarUrl" alt="" class="coverPic">
@@ -33,24 +33,26 @@
             </div>
         </div>
         <div class="dialogBox" v-else>
-            <div class="dialogHd">
+            <div class="dialogHd" @click="test">
                 <div class="back" @click="showDialog = false"><LeftOutlined /></div>
-                {{ msgDetail[0].fromUser.nickname }}
+                {{ fromUser.nickname }}
             </div>
-            <div class="dialogContent">
-                <div class="batch" v-for="(item) in msgDetail" :key="item.id">
-                    <div class="userPic">
-                        <img :src="item.fromUser.avatarUrl" alt="" class="coverPic">
-                    </div>
-                    <div class="batchContent">
-                        <div class="text">{{ item.msg.msg }}</div>
-                        <div class="substance" @click="toUrl(item.msg.generalMsg.webUrl)">
-                            <div class="cover">
-                                <img :src="item.msg.generalMsg.cover" alt="" class="coverPic">
-                            </div>
-                            <div class="detail">
-                                <div class="title">{{ item.msg.generalMsg.inboxBriefContent }}</div>
-                                <div class="subtitle" v-if="item.msg.generalMsg.noticeMsg">abc</div>
+            <div class="dialogContent" ref="dialogContentRef" @scroll="getNewmsg(fromUser.userId)">
+                <div ref="dialogScrollRef">
+                    <div class="batch" v-for="(item) in msgDetail" :key="item.id" :class="{'self':item.fromUser.userId !== fromUser.userId}">
+                        <div class="userPic" v-if="item.fromUser.userId === fromUser.userId">
+                            <img :src="item.fromUser.avatarUrl" alt="" class="coverPic">
+                        </div>
+                        <div class="batchContent">
+                            <div class="text">{{ item.msg.msg }}</div>
+                            <div class="substance" @click="toUrl(item.msg.generalMsg.webUrl)" v-if="item.msg.generalMsg">
+                                <div class="cover">
+                                    <img :src="item.msg.generalMsg.cover" alt="" class="coverPic">
+                                </div>
+                                <div class="detail">
+                                    <div class="title">{{ item.msg.generalMsg.inboxBriefContent }}</div>
+                                    <div class="subtitle" v-if="item.msg.generalMsg.noticeMsg">abc</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -84,19 +86,27 @@
     </div>
 </template>
 <script setup>
-import { ref , reactive, getCurrentInstance} from 'vue';
+import { ref , reactive, getCurrentInstance, nextTick, onMounted} from 'vue';
 import timeFormat from '@/utils/timeFormat'
 import TransparemtBtn from './unit/TransparemtBtn.vue';
 import {LeftOutlined,} from '@ant-design/icons-vue';
+import throttle from '@/utils/throttle';
+import { useStore } from 'vuex';
 const {proxy:{$axios}} = getCurrentInstance();
 const activedNav = ref(0);
 const msgsObj = ref({});
 const msgs = ref([]);
+const dialogContentRef = ref(null);
+const fromUser = ref({});
+const store = useStore();
+const msgBoxRef = ref(null);
+const dialogScrollRef = ref(null);
 const msgDetail = ref([{
     fromUser:{},
     toUser:{},
     msg:{}
 }]);
+const before = ref(null);
 const showDialog = ref(false);
 const getMsg = async ()=>{
     const {data:res} = await $axios({
@@ -115,27 +125,68 @@ const getMsg = async ()=>{
     }
 }
 const getDialog = async (id)=>{
+    let url = `/api/msg/private/history?uid=${id}&limit=3&timestamp=${Date.now()}`;
+    if(before.value){
+        url += `&before=${before.value}`;
+    }
     const {data:res} = await $axios({
         method:'get',
-        url:`/api/msg/private/history?uid=${id}`
+        url,
     })
     if(res.code === 200){
         for(let i = 0;i<res.msgs.length;i++){
             res.msgs[i].msg = JSON.parse(res.msgs[i].msg);
         }
-        msgDetail.value = res.msgs;
+        if(before.value){
+            const scrollBottom = dialogScrollRef.value.offsetHeight - dialogContentRef.value.scrollTop;
+            msgDetail.value.unshift(...res.msgs.reverse());
+            nextTick(()=>{
+                dialogContentRef.value.scrollBy({
+                   top: dialogScrollRef.value.offsetHeight-scrollBottom,
+                   left: 0,
+                })
+            })
+        }else{
+            msgDetail.value = res.msgs.reverse();
+        }
+        before.value = msgDetail.value[0].time;
+        return true;
     }else{
         console.log(res);
+        return false;
     }
 }
 const toUrl = (url)=>{
     location.href = url;
 }
-const toDialog = (id)=>{
+const toDialog = async (user)=>{
     showDialog.value = true;
-    getDialog(id);
+    fromUser.value = user;
+    before.value = null;
+    msgDetail.value = [{
+        fromUser:{},
+        toUser:{},
+        msg:{}
+    }];
+    await getDialog(user.userId);
+    dialogContentRef.value.scrollBy({
+        top: dialogContentRef.value.scrollHeight,
+        left: 0,
+    })
+}
+const close = (e)=>{
+    if(!msgBoxRef.value.contains(e.target)){
+        store.commit('changeSlider',0);
+    }
+}
+const getDialogTh = throttle(getDialog,300);
+const getNewmsg = (id)=>{
+    if(dialogContentRef.value.scrollTop <= 30){
+        getDialogTh(id);
+    }
 }
 getMsg();
+window.addEventListener('click',close,true);
 </script>
 <style scoped lang='less'>
 @import '@/assets/theme.less';
@@ -254,6 +305,7 @@ getMsg();
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
+                    text-align: left;
                 }
             }
             &:hover{
@@ -289,7 +341,7 @@ getMsg();
             overflow: auto;
             flex: 1;
             width: 100%;
-            padding-right: 40px;
+            padding: 0 16px;
             .batch{
                 display: flex;
                 width: 100%;
@@ -297,24 +349,24 @@ getMsg();
                 margin-bottom: 20px;
                 overflow: hidden;
                 .userPic{
-                    margin: 0 17px;
+                    margin-right: 16px;
                     width: 34px;
+                    min-width: 34px;
                     height: 34px;
                     border-radius: 50%;
+                    overflow: hidden;
                 }
                 .batchContent{
-                    flex: 1;
                     background-color: #424242;
                     padding: 9px;
-                    padding-bottom: 12px;
                     border-radius: 0 14px 14px 14px;
                     overflow: hidden;
+                    max-width: 255px;
                     .text{
-                        font-size: 13px;
-                        line-height: 18px;
+                        font-size: 12px;
+                        line-height: 16px;
                         color: @black-font-color;
                         text-align: left;
-                        margin-bottom: 2px;
                     }
                     .substance{
                         background-color: #383838;
@@ -322,6 +374,8 @@ getMsg();
                         padding: 8px;
                         overflow: hidden;
                         cursor: pointer;
+                        margin-top: 2px;
+                        margin-bottom: 4px;
                         .cover{
                             width: 34px;
                             height: 34px;
@@ -341,6 +395,13 @@ getMsg();
                                 color: #717171;
                             }
                         }
+                    }
+                }
+                &.self{
+                    justify-content: right;
+                    .batchContent{
+                        border-radius: 14px 0 14px 14px;
+                        background-color: #4a5b6d;
                     }
                 }
             }

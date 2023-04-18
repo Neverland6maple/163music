@@ -228,7 +228,7 @@ watch(()=>route.query.from,val=>{
 const getMsg = async ()=>{
     const {data:res} = await $axios({
         method:'get',
-        url:`/api/msg/private`
+        url:`/api/msg/private?timestamp=${Date.now()}`
     })
     if(res.code === 200){
         newMsgCount.value = res.newMsgCount;

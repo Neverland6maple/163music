@@ -1,5 +1,5 @@
 <template>
-    <div id="myTable">
+    <div id="myTable" @contextmenu="test">
         <a-spin :indicator="indicator" tip="加载中"  :spinning="props.spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
         <a-table
         class="albumTable"
@@ -16,8 +16,10 @@
     </div>
 </template>
 <script setup>
+import { $axios } from '@/request/axios';
 import { LoadingOutlined, } from '@ant-design/icons-vue'
 import { getCurrentInstance, watch, reactive,ref,h,computed } from 'vue';
+import { useStore } from 'vuex';
 const props = defineProps({
     columns:Array,
     dataSource:Array,
@@ -33,6 +35,7 @@ const props = defineProps({
     },
 });
 const emit = defineEmits(['handlePlaySong','handleTableChange'])
+const store = useStore();
 const indicator = h(LoadingOutlined, {
   style: {
     fontSize: '20px',
@@ -49,6 +52,18 @@ const customRow = (record) => {
         handlePlaySong(record.key,record.index);
       }
     },
+    oncontextmenu:async (event)=>{
+      const {data:res} = await $axios({
+        method:'get',
+        url:`/api/comment/music?id=${record.key}&limit=1`
+      })
+      store.commit('changeTableMenu',{
+        show:true,
+        x:event.pageX,
+        y:event.pageY,
+        commentCount:res.total,
+      })
+    }
   };
 }
 const handlePlaySong = (songId,index,id)=>{
@@ -57,10 +72,14 @@ const handlePlaySong = (songId,index,id)=>{
 const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>{
    emit('handleTableChange',pagination,filters,sorter,{ currentDataSource });
 }
+const test = (e)=>{
+  e.preventDefault();
+}
 </script>
 <style lang="less" scoped>
 @import '@/assets/theme.less';
 #myTable{
+  position: relative;
     .albumTable{
         :deep(.ant-table){
             background-color: transparent;
@@ -78,42 +97,57 @@ const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>
                 color: #d73535 !important;
               }
             }
-            .album{
+            .album,.song,.singer{
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+
+            }
+            .downloadIcon{
+              cursor: pointer;
+            }
+            .album{
               cursor: pointer;
               color: #999;
               &:hover{
                 color: #b1b9b9;
               }
+              mark {
+                background-color: transparent;
+                color: #7ab9e6;
+              }
             } 
             .song{
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
               display: flex;
               align-items: center;
               justify-content:left;
               .vipIcon,mvIcon,noCopyrightIcon{
                 margin-left: 1px;
               }
+              mark {
+                background-color: transparent;
+                color: #7ab9e6;
+              }
             }
             .singer{
               cursor: pointer;
               color: #999;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
               .singerName{
                 transition: none;
               }
               .singerName:hover{
                 color: #b1b9b9;
               }
+              mark {
+                background-color: transparent;
+                color: #7ab9e6;
+              }
             }
             .dt{
               color: #999;
+            }
+            .likeIcon:hover,.downloadIcon:hover{
+              color: #949494;
             }
             .ant-table-cell{
                 background-color: transparent;
