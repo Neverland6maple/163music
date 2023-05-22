@@ -24,13 +24,15 @@
       </a-menu-item-group>
 
       <a-sub-menu key="sub1" @titleClick="titleClick">
-        <template #title>创建的歌单</template>
-        <a-menu-item v-for="(item) in userCreators" :key="item.id" @click="toPlaylist(item.id)">{{item.name}}</a-menu-item>
+        <template #title>创建的歌单
+          <span class="createPlaylist" @click.stop="createPlaylist">+</span>
+        </template>
+        <a-menu-item v-for="(item) in userCreators" :key="item.id" @click="toPlaylist(item.id)" @contextmenu.prevent="showSliderMenu(item.id,true,$event)">{{item.name}}</a-menu-item>
       </a-sub-menu>
 
       <a-sub-menu key="sub2" @titleClick="titleClick" v-if="islogin">
         <template #title>收藏的歌单</template>
-        <a-menu-item v-for="(item) in userCollections" :key="item.id" @click="toPlaylist(item.id)">{{ item.name }}</a-menu-item>
+        <a-menu-item v-for="(item) in userCollections" :key="item.id" @click="toPlaylist(item.id)" @contextmenu.prevent="showSliderMenu(item.id,false,$event)">{{ item.name }}</a-menu-item>
       </a-sub-menu>
 
     </a-menu>
@@ -46,6 +48,7 @@ const openKeys = ref(['sub1','sub2']);
 const {proxy:{$axios,$post}} = getCurrentInstance();
 const profile = computed(()=>store.state.user.profile);
 const islogin = computed(()=>store.getters['user/islogin']);
+const update = computed(()=>store.state.createPlaylist.update);
 const myLikes = ref({});
 const router = useRouter();
 const userCreators = ref([]);
@@ -66,10 +69,12 @@ const toPlaylist = (id,like)=>{
 const getPlaylist = async ()=>{
     const {data:res} = await $axios({
       method:'get',
-      url:`/api/user/playlist?uid=${profile.value.userId}`
+      url:`/api/user/playlist?uid=${profile.value.userId}&timestamp=${Date.now()}`
     })
     const userPlaylist = [];
     const playlist = res.playlist;
+    userCreators.value = [];
+    userCollections.value = [];
     myLikes.value = playlist[0];
     userPlaylist.push(playlist[0]);
     for(let i = 1;i<playlist.length;i++){
@@ -82,12 +87,24 @@ const getPlaylist = async ()=>{
     }
     store.commit('user/setPlaylist',userPlaylist);
 };
+const createPlaylist = ()=>{
+  store.commit('changeCreatePlaylist',{show:true})
+}
+const showSliderMenu = (id,user,e)=>{
+  store.commit('changeSliderMenu',{show:true,x:e.x,y:e.y,user:user,id:id})
+}
 watch(islogin,(newVal)=>{
   if(newVal){
     getPlaylist();
   }
 },{
   immediate:true,
+})
+watch(update,val=>{
+  if(val){
+    getPlaylist();
+    store.commit('changeCreatePlaylist',{update:false});
+  }
 })
 </script>
 

@@ -20,6 +20,7 @@ import { $axios } from '@/request/axios';
 import { LoadingOutlined, } from '@ant-design/icons-vue'
 import { getCurrentInstance, watch, reactive,ref,h,computed } from 'vue';
 import { useStore } from 'vuex';
+import timeFormat from '@/utils/timeFormat';
 const props = defineProps({
     columns:Array,
     dataSource:Array,
@@ -32,6 +33,10 @@ const props = defineProps({
     id:{
       type:Number,
       required:false
+    },
+    user:{
+      type:Boolean,
+      default:false,
     },
 });
 const emit = defineEmits(['handlePlaySong','handleTableChange'])
@@ -57,11 +62,25 @@ const customRow = (record) => {
         method:'get',
         url:`/api/comment/music?id=${record.key}&limit=1`
       })
+      const {data:{songs:song}} = await $axios({
+        method:'get',
+        url:`/api/song/detail?ids=${record.key}`
+      })
       store.commit('changeTableMenu',{
         show:true,
         x:event.pageX,
         y:event.pageY,
         commentCount:res.total,
+        song:{
+          id:song[0].id,
+          name:song[0].name,
+          singer:song[0].ar,
+          dt:timeFormat(song[0].dt),
+          fee:song[0].fee,
+          noCopyrightRcmd:song[0].noCopyrightRcmd,
+          mv:song[0].mv,
+        },
+        user:props.user,
       })
     }
   };

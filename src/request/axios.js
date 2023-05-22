@@ -36,8 +36,16 @@ axios.interceptors.response.use(
 	 error => {
 		 if (error.response.status) {
 			switch (error.response.status) {
+				case 301:
+					if(error.response.data.code === 301){
+						//需要登陆
+						localStorage.removeItem('cookie');
+						router.push(`/?from=${JSON.stringify(location.hash.slice(1))}`);
+					}
+					break;
 				case 400:
 					if(error.response.data.code === 20001){
+						//登陆过期
 						localStorage.removeItem('cookie');
 						router.push(`/?from=${JSON.stringify(location.hash.slice(1))}`);
 					}

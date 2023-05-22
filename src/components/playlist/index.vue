@@ -21,7 +21,7 @@
                   </div>
                 </div>
                 <div id="playlistFn">
-                    <PlayAll></PlayAll>
+                    <PlayAll @click="playAll"></PlayAll>
                    <TransparemtBtn @click="subscribe">
                     <template #icon>
                       <FolderAddOutlined/>
@@ -80,7 +80,6 @@
                     <a-tab-pane key="2" :tab="`评论(${playlist.commentCount})`"></a-tab-pane>
                     <a-tab-pane key="3" tab="收藏者"></a-tab-pane>
                 </a-tabs>
-                <!-- <input type="text" v-model="value" style="background-color:black"  > -->
                 <div class="tableSearch">
                   <input type="text" v-model="value" class="searchIpt" placeholder="搜索歌单音乐" @keydown="filterDataDB">
                   <div class="modifier">
@@ -89,7 +88,7 @@
                   </div>
                 </div>
             </div>
-            <myTable :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong" :spinning="spinning" v-if="activeKey === '1'" :pagination=false></myTable>
+            <myTable :user="isCreator" :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong" :spinning="spinning" v-if="activeKey === '1'" :pagination=false></myTable>
             <albumComment v-else-if="activeKey === '2'" :id="playlistId" :type=2></albumComment>
             <subscribers v-else-if="activeKey === '3'" :id="playlistId">收藏者</subscribers>
         </div>
@@ -240,7 +239,10 @@ const profile = computed(()=>store.state.user.profile);
 const playlist = ref({tags:[]});
 const playlistId = ref(null);
 const activeKey = ref('1');
+const unsubscribeState = computed(()=>store.getters.unsubscribe); 
+const tableMenu = computed(()=>store.state.tableMenu);
 const likelist = computed(()=>store.state.user.likelist);
+
 let songList = [];
 const isCreator = computed(()=>profile.value.userId === creator.value.userId);
 let dataSourceOrig;
@@ -252,6 +254,7 @@ const getList = async (id)=>{
   });
   creator.value = res1.playlist.creator;
   playlist.value = res1.playlist;
+
   const limit = res1.playlist.trackCount > 1000 ? 1000 : res1.playlist.trackCount;
   const {data:res} = await $axios({
     method:'get',
@@ -274,13 +277,20 @@ const getList = async (id)=>{
       key: item.id,
       index,
       number:index+1,
-      like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
-      download:<DownloadOutlined class={'downloadIcon'}/>,
-      song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
-      singer: <div class="singer">{content}</div>,
-      album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
-      dt:<div class='dt' dt={item.dt} >{timeFormat(item.dt)}</div>,
-      liked,
+      like:'1',
+      download:'1',
+      song: '1',
+      singer: '1',
+      album: '1',
+      dt:'1',
+
+      // like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
+      // download:<DownloadOutlined class={'downloadIcon'}/>,
+      // song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+      // singer: <div class="singer">{content}</div>,
+      // album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
+      // dt:<div class='dt' dt={item.dt} >{timeFormat(item.dt)}</div>,
+      // liked,
     })
     dataSourceOrig = dataSource.value;
     songList.push({
@@ -309,10 +319,15 @@ const playCount = computed(()=>{
     }
     return playlist.value.playCount;
 })
-const subscribe = ()=>{
+const subscribe = async ()=>{
   const t = playlist.value.subscribed ? '2' : '1';
-  $post(`/api/playlist/subscribe?t=${t}&id=${playlistId.value}`);
-  getList(playlistId.value);
+  await $post(`/api/playlist/subscribe?t=${t}&id=${playlistId.value}`);
+  const {data:res1} = await $axios({
+    method:'get',
+    url:`/api/playlist/detail?id=${playlistId.value}&timestamp=${Date.now()}`,
+  });
+  creator.value = res1.playlist.creator;
+  playlist.value = res1.playlist;
 }
 const filterData = ()=>{
   revoke();
@@ -404,7 +419,6 @@ const highlight = (data,key)=>{
   }
   return content
 }
-
 const revoke = ()=>{
   dataSource.value.forEach(e=>{
     e.song = <div class={'song'}>{unHighlight(e.song.children[0])}{...e.song.children.slice(1)}</div>
@@ -421,7 +435,6 @@ const revoke = ()=>{
   })
   dataSource.value = dataSourceOrig;
 }
-
 const unHighlight = (data)=>{
   if(data.type.description === 'Fragment'){
     let str = '';
@@ -436,13 +449,29 @@ const unHighlight = (data)=>{
   }
   return data.children;
 }
-
+const playAll = ()=>{
+  handlePlaySong(songList[0].id,0);
+}
 watch(()=>route.params.playlistId,(newValue)=>{
-  playlistId.value = newValue;
-  getList(playlistId.value);
+  if(newValue === 'undefined'){
+    // const path = route.fullPath;
+    // const arr = path.split('?');
+    // if(arr.at(-1).includes('=')){
+    //   arr[arr.length-1] = '?' + arr.at(-1);
+    //   console.log(arr.at(-1));
+    // }
+    // const newPath = arr.reduce((pre,cur)=> pre + cur, arr.shift().slice(0,-9) + playlistId );
+    // 要请求到歌单的id才能替换
+    router.replace('/');
+  }else{
+    playlistId.value = newValue;
+    value.value = '';
+    getList(playlistId.value);
+  }
 },{
   immediate:true
 })
+
 watch(likelist,async (newVal,oldVal)=>{
   const uset = new Set(newVal);
   if(props.like){
@@ -494,6 +523,18 @@ watch(likelist,async (newVal,oldVal)=>{
   }
 },{
   deep:true
+})
+watch(unsubscribeState,val=>{
+  if(val){
+    for(let i = 0;i<dataSource.value.length;i++){
+      dataSource.value[i].index = i;
+      dataSource.value[i].number = i + 1;
+      if(dataSource.value[i].key === tableMenu.value.song.id){
+        dataSource.value.splice(i,1);
+        i--;
+      }
+    }
+  }
 })
 </script>
 <style lang="less" scoped>

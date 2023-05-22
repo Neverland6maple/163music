@@ -59,11 +59,12 @@ const login = async ()=>{
             }else if (res3.code === 803) {
               // 这一步会返回cookie
               alert('授权登录成功');
+              clearInterval(timer)
               localStorage.setItem('cookie', res3.cookie);
               await getLoginStatus();
               exit();
               if(route.query.from){
-                router.push(JSON.parse())
+                router.push(route.query.from)
               }
             }
         }, 3000);

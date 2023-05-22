@@ -111,7 +111,7 @@ onMounted(()=>{
             height: 32px;
             width: 32px;  
             line-height: 32px;   
-            z-index: 99; 
+            z-index: 1; 
             background-color: rgba(0, 0, 0, .2);
             border-radius: 50%;
             position: absolute;
@@ -157,19 +157,19 @@ onMounted(()=>{
         &.left{
             left: 0;
             transform: translateX(0);
-            z-index: 1;
+            z-index: 0;
         }
         &.mid{
             left: 50%;
             transform: translateX(-50%);
             height: 194px;
             width: 538px;
-            z-index: 99;
+            z-index: 1;
             cursor: pointer;
         }
         &.right{
             left: 100%;
-            z-index: 1;
+            z-index: 0;
             transform: translateX(-100%);
         }
     }

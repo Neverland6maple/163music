@@ -33,6 +33,10 @@
         <a-layout-footer v-if="isCover === false"><myFooter :skipTime="skipTime" a="1"></myFooter></a-layout-footer>
     </a-layout>
     <TableMenu></TableMenu>
+    <confirm v-if="comfirmShow.show"></confirm>
+    <PlaylistBox v-if="playlistBoxShow"></PlaylistBox>
+    <CreatePlaylist v-if="createPlaylist.show"></CreatePlaylist>
+    <SliderMenu></SliderMenu>
   </div>
 </template>
 <script>
@@ -47,9 +51,13 @@ import SongList from '@/components/songList/SongList.vue'
 import Login from '@/components/Login.vue'
 import Msg from './components/Msg.vue'
 import TableMenu from './components/unit/TableMenu.vue'
+import SliderMenu from './components/unit/SliderMenu.vue'
 import { VerticalAlignTopOutlined} from '@ant-design/icons-vue'
+import confirm from './components/unit/confirm.vue'
+import PlaylistBox from './components/unit/PlaylistBox.vue'
+import CreatePlaylist from './components/unit/CreatePlaylist.vue'
 export default {
-  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList , Login , VerticalAlignTopOutlined ,Msg,TableMenu },
+  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList , Login , VerticalAlignTopOutlined ,Msg,TableMenu,confirm,PlaylistBox,CreatePlaylist,SliderMenu },
   setup(){
     const store = useStore();
     const slider = computed(()=>store.state.slider);
@@ -64,6 +72,9 @@ export default {
       skipTime.value = value;
     }
     provide('setSkipTime',setSkipTime);
+    const comfirmShow = computed(()=>store.state.comfirmShow);
+    const playlistBoxShow = computed(()=>store.state.playlistBoxShow);
+    const createPlaylist = computed(()=>store.state.createPlaylist);
     const loginShow = computed(()=>store.state.loginShow);
     const getLikes = async (id)=>{
         const {data:res} = await $axios({
@@ -93,6 +104,9 @@ export default {
       scrollToTopFn,
       playerPageRef,
       showCommentBox,
+      comfirmShow,
+      playlistBoxShow,
+      createPlaylist,
     }
   },
 }

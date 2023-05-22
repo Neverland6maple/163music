@@ -1,6 +1,6 @@
 <template>
     <div id="commentList">
-        <a-spin :indicator="indicator" tip="加载中" :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
+        <a-spin tip="加载中" :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
         <template v-if="!spinning">
             <div id="hotComments" v-if="hotComments.length > 0 && current === 1">
                 <h3 class="title">精彩评论({{ total }})</h3>

@@ -5,7 +5,7 @@
         <div id="playerPageFn">
           <div class="fold"><DownOutlined @click="handleSpread(false)"/></div>
           <div class="spreadFn" @click="likeSong"><HeartOutlined v-if="!liked"/><HeartFilled style="color:#ec4141" class="likeIcon liked" v-else/></div>
-          <div class="spreadFn"><FolderAddOutlined /></div>
+          <div class="spreadFn" @click="showPlaylistBox"><FolderAddOutlined /></div>
           <div class="spreadFn"><DownloadOutlined /></div>
           <div class="spreadFn"><ShareAltOutlined /></div>
         </div>
@@ -268,6 +268,9 @@ export default defineComponent({
       }
       startY = e.clientY;
     }
+    const showPlaylistBox = ()=>{
+      store.commit('changePlaylistBoxShow',true);
+    }
     watch(()=>songInfo.value.id,(newValue)=>{
       nextTick(()=>{
         play()
@@ -336,6 +339,7 @@ export default defineComponent({
       sequenceMap,
       likeSong,
       liked,
+      showPlaylistBox,
     }
   }
 })

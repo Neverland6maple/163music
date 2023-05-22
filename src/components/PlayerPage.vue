@@ -1,4 +1,3 @@
-
 <template>
     <div id="playerPage" :class="{'reverse': isSpreading}" ref="playerPageRef" @scroll="showScrollToTop">
         <div class="player-content-box">
@@ -27,7 +26,7 @@
                         </div>
                     </div>
                     <div id="lyric">
-                        <lyricComponent :lyric="songInfo?.lyric[0]" :current="current"></lyricComponent>
+                        <lyricComponent :lyric="songInfo?.lyric[0]"></lyricComponent>
                     </div>
                 </div>
             </div>
@@ -82,7 +81,6 @@ import lyricComponent from '@/components/player/lyric.vue'
 import commentList from './unit/commentList.vue';
 import vipIcon from '@/components/icon/vip.vue'
 import mvIcon from './icon/mv.vue';
-import { onBeforeRouteLeave, onBeforeRouteUpdate} from 'vue-router';
 import {CloseOutlined} from '@ant-design/icons-vue'
 const store = useStore();
 const time = ref(0);
@@ -164,6 +162,7 @@ defineExpose({
   transform: translateY(100%);
   transition: all 0.3s linear;
   overflow: auto;
+  z-index: 1;
   &.reverse{
     transform:translateY(0);
   }
