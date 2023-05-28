@@ -1,5 +1,5 @@
 <template>
-    <div class="mvIcon" @click="toMv">MV<CaretRightOutlined /></div>
+    <div class="mvIcon">MV</div>
 </template>
 <style scoped lang="less">
 .mvIcon{

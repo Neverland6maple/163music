@@ -15,12 +15,7 @@
                 <div id="search">
                     <a-input id="ipt" placeholder="Basic usage" v-model:value="keyword" @change="getSuggest(keyword)" @pressEnter="handleSearch(keyword)" @focus="changeIsSearching"> 
                         <template #prefix>
-                            <user-outlined type="user" />
-                        </template>
-                        <template #suffix>
-                            <a-tooltip title="Extra information">
-                            <info-circle-outlined style="color: rgba(0, 0, 0, 0.45)" />
-                            </a-tooltip>
+                            <user-outlined type="user" style="color: #b3b3b4;"/>
                         </template>
                     </a-input>
                 </div>
@@ -126,7 +121,7 @@
     </div>
 </template>
 <script setup>
-import {CustomerServiceOutlined,DownOutlined,SkinOutlined,SettingOutlined,MailOutlined,ExpandOutlined,MinusOutlined,BorderOutlined,CloseOutlined,ExpandAltOutlined,DeleteOutlined} from '@ant-design/icons-vue'
+import {CustomerServiceOutlined,UserOutlined,DownOutlined,SkinOutlined,SettingOutlined,MailOutlined,ExpandOutlined,MinusOutlined,BorderOutlined,CloseOutlined,ExpandAltOutlined,DeleteOutlined} from '@ant-design/icons-vue'
 import { computed } from '@vue/reactivity';
 import { getCurrentInstance, ref,watch} from 'vue';
 import { onBeforeRouteUpdate, useRouter ,useRoute } from 'vue-router';

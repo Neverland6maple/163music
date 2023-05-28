@@ -1,6 +1,6 @@
 <template>
     <div id="playAll">
-        <a-button type="primary" :loading="iconLoading" @click="enterIconLoading">
+        <a-button type="primary">
             <template #icon><caret-right-outlined /></template>
             播放全部
             <span class="playAllIcon">

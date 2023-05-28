@@ -117,7 +117,7 @@ export default defineComponent({
   props:{
     skipTime:{
       require:false,
-      type:String,
+      type:Number,
     },
   },
   setup(props,{emit}){

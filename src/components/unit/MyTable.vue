@@ -1,5 +1,5 @@
 <template>
-    <div id="myTable" @contextmenu="test">
+    <div id="myTable" @contextmenu="stopDefault">
         <a-spin :indicator="indicator" tip="加载中"  :spinning="props.spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
         <a-table
         class="albumTable"
@@ -18,14 +18,14 @@
 <script setup>
 import { $axios } from '@/request/axios';
 import { LoadingOutlined, } from '@ant-design/icons-vue'
-import { getCurrentInstance, watch, reactive,ref,h,computed } from 'vue';
+import { h } from 'vue';
 import { useStore } from 'vuex';
 import timeFormat from '@/utils/timeFormat';
 const props = defineProps({
     columns:Array,
     dataSource:Array,
     spinning:Boolean,
-    pagination:Object || Boolean,
+    pagination:[Object,Boolean],
     showHeader:{
       type:Boolean,
       default:true,
@@ -91,7 +91,7 @@ const handlePlaySong = (songId,index,id)=>{
 const  handleTableChange = (pagination,filters, sorter, { currentDataSource })=>{
    emit('handleTableChange',pagination,filters,sorter,{ currentDataSource });
 }
-const test = (e)=>{
+const stopDefault = (e)=>{
   e.preventDefault();
 }
 </script>

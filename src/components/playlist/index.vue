@@ -171,7 +171,7 @@ const columns = [
     customCell : (record,rowIndex) => {
       return {
         onClick:(event) => {
-          const id = event.target.dataset.id
+          const id = event.target.dataset.id;
           if(id){
             router.push(`/mv/${event.target.dataset.id}`)
           }
@@ -190,7 +190,7 @@ const columns = [
     customCell : (record,rowIndex) => {
       return {
         onClick:(event) => {
-          const singerId = event.target.dataset.singerid
+          const singerId = event.target.dataset.singerid;
           if(singerId){
             router.push(`/artist/${event.target.dataset.singerid}`)
           }
@@ -245,7 +245,6 @@ const likelist = computed(()=>store.state.user.likelist);
 
 let songList = [];
 const isCreator = computed(()=>profile.value.userId === creator.value.userId);
-let dataSourceOrig;
 const getList = async (id)=>{
   spinning.value = true;
   const {data:res1} = await $axios({
@@ -270,29 +269,28 @@ const getList = async (id)=>{
       if(index > 0){
         content.push(<span class="slash">/</span>);
       }
-      content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
+      content.push(<span class='singerName' data-singerId={el.id}>{el.name}</span>);
     });
     const liked = likelist.value.has(item.id);
     dataSource.value.push({
       key: item.id,
       index,
       number:index+1,
-      like:'1',
-      download:'1',
-      song: '1',
-      singer: '1',
-      album: '1',
-      dt:'1',
+      // like:'1',
+      // download:'1',
+      // song: '1',
+      // singer: '1',
+      // album: '1',
+      // dt:'1',
 
-      // like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
-      // download:<DownloadOutlined class={'downloadIcon'}/>,
-      // song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
-      // singer: <div class="singer">{content}</div>,
-      // album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
-      // dt:<div class='dt' dt={item.dt} >{timeFormat(item.dt)}</div>,
-      // liked,
+      like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
+      download:<DownloadOutlined class={'downloadIcon'}/>,
+      song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+      singer: <div class="singer">{content}</div>,
+      album: <div class="album" playlistId={item.al.id}>{item.al.name}</div>,
+      dt:<div class='dt' dt={item.dt} >{timeFormat(item.dt)}</div>,
+      liked,
     })
-    dataSourceOrig = dataSource.value;
     songList.push({
       id:item.id,
       name:item.name,
@@ -433,7 +431,7 @@ const revoke = ()=>{
     });
     e.singer = <div class={'singer'}>{content}</div>
   })
-  dataSource.value = dataSourceOrig;
+  // dataSource.value = dataSourceOrig;
 }
 const unHighlight = (data)=>{
   if(data.type.description === 'Fragment'){
