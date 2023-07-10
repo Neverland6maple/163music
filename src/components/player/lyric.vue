@@ -16,7 +16,6 @@
     </div>
 </template>
 <script setup>
-import Worker from "worker-loader!./worker"
 import formatLyric from '@/utils/formatLyric';
 import { computed } from '@vue/reactivity';
 import { onMounted, ref, watch,nextTick, inject } from 'vue';
