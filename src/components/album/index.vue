@@ -275,7 +275,7 @@ watch(likelist,val=>{
             display: flex;
             flex-direction: column;
             justify-content: left;
-            align-items: start;
+            align-items: flex-start;
             margin-left: 40px;
             #albumName{
                 display: flex;

@@ -20,5 +20,8 @@ module.exports = {
     'vue/no-unused-components':0,
     'no-extra-semi':0,
     'no-useless-escape':0,
+  },
+  globals: {
+    'Vue': true,
   }
 }

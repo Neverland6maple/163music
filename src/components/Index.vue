@@ -30,7 +30,6 @@ export default defineComponent({
                     break;
             }
         }
-        
         return {
             activeKey,
             handleIndexChange,

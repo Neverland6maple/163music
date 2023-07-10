@@ -99,11 +99,11 @@
 </template>
 <script setup>
 import store from '@/store';
-import { getCurrentInstance, onMounted, onUnmounted, ref ,watch} from 'vue';
+import { getCurrentInstance, onUnmounted, ref ,watch} from 'vue';
 import {LeftOutlined,CaretDownOutlined,DownloadOutlined,LikeOutlined,FolderAddOutlined,LinkOutlined} from '@ant-design/icons-vue';
 import transparentBtn from '@/components/unit/TransparemtBtn.vue';
 import myVideo from './myVideo.vue';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import commentList from '../unit/commentList.vue';
 const route = useRoute();
 const {proxy:{$axios}} = getCurrentInstance();

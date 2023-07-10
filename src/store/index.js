@@ -45,6 +45,7 @@ export default createStore({
       state.isSpreading = value;
     },
     changeSlider(state,value){
+      console.log(value);
       state.slider = value;
     },
     changeLoginShow(state,value){
@@ -55,12 +56,6 @@ export default createStore({
     },
     changeTableMenu(state,value){
       Object.assign(state.tableMenu,value);
-      // if(value.x >= 0) state.tableMenu.x = value.x;
-      // if(value.y >= 0) state.tableMenu.y = value.y;
-      // if(value.commentCount >= 0) state.tableMenu.commentCount = value.commentCount;
-      // if(typeof value.show === 'boolean') state.tableMenu.show = value.show;
-      // if(value.id) state.tableMenu.id = value.id;
-      // if(typeof value.user === 'boolean') state.tableMenu.user = value.user;
     },
     changeSliderMenu(state,value){
       Object.assign(state.sliderMenu,value);

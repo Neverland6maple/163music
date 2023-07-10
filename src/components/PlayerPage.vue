@@ -76,7 +76,7 @@
 import {useStore} from 'vuex'
 import router from '@/router';
 import { computed } from '@vue/reactivity'
-import { defineComponent, getCurrentInstance,watch,ref, onMounted } from 'vue';
+import { getCurrentInstance,watch,ref } from 'vue';
 import lyricComponent from '@/components/player/lyric.vue'
 import commentList from './unit/commentList.vue';
 import vipIcon from '@/components/icon/vip.vue'
@@ -137,13 +137,27 @@ const comment = async ()=>{
         console.log(data);
     }
 }
+watch(()=>isSpreading.value,(val)=>{
+    if(val){
+        if(!hotComments.value.length){
+            getList(songInfo.value.id,time.value,1);
+        }
+    }else{
+        hotComments.value = [];
+        latestComments.value = [];
+        commentListRef.value.reset();
+    }
+})
 watch(()=>songInfo.value,(val)=>{
-    if(commentListRef.value) commentListRef.value.reset();
-    getList(val.id,time.value,1);
+    if(commentListRef.value){
+        commentListRef.value.reset();
+        if(isSpreading.value) getList(val.id,time.value,1);
+    }
 },{
     immediate:true,
     deep:true,
 })
+
 defineExpose({
     scrollToTop,
     showCommentBox,

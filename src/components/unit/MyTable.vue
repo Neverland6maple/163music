@@ -18,7 +18,7 @@
 <script setup>
 import { $axios } from '@/request/axios';
 import { LoadingOutlined, } from '@ant-design/icons-vue'
-import { h } from 'vue';
+import { h, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import timeFormat from '@/utils/timeFormat';
 const props = defineProps({
@@ -187,7 +187,8 @@ const stopDefault = (e)=>{
                 background-color: #373737;
             }
             tr td:first-child{
-                padding-left: 20px;
+                padding-left: 13px;
+                text-align: center;
                 font-size: 13px;
                 color: #666;
             }

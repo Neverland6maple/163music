@@ -1,4 +1,5 @@
-const { defineConfig } = require('@vue/cli-service')
+const { defineConfig } = require('@vue/cli-service');
+const path = require("path");
 module.exports = defineConfig({
   transpileDependencies: true,
   publicPath:'./',
@@ -13,5 +14,54 @@ module.exports = defineConfig({
         }
       }
     }
-  }
+  },
+  productionSourceMap:false,
+  chainWebpack: config => {
+    //webpack-bundle-analyzer
+    config
+    .plugin('webpack-bundle-analyzer')
+    .use(require('webpack-bundle-analyzer').BundleAnalyzerPlugin);
+  },
+  configureWebpack: {
+    module: {
+      rules: [
+        {
+          test: /\.(png|jpe?g|gif|svg)$/i,
+          exclude: /node_modules/,
+          type: 'javascript/auto',
+          use: [
+            {
+              loader: 'url-loader',
+              options: {
+                esModule: false,
+                name: 'img/[name].[hash:3].[ext]',
+                limit: 1024 * 10,
+                context: path.resolve(__dirname, './src'), 
+                publicPath: './'
+              }
+            }
+          ]
+        },
+      ]
+    },
+    optimization: {
+      runtimeChunk: true,
+      splitChunks: {
+        chunks: "initial", 
+        automaticNameDelimiter: '~',  
+        cacheGroups: { // 缓存组
+          vendors: {
+            test: /[\\/]node_modules[\\/]/,
+          },
+        },
+      }
+    },
+    plugins:[
+
+    ],
+    externals:{
+      // 'vue': 'Vue',
+      // 'vue-router': 'VueRouter',
+    },
+  },
 })

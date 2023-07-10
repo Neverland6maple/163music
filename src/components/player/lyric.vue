@@ -16,10 +16,15 @@
     </div>
 </template>
 <script setup>
+import Worker from "worker-loader!./worker"
 import formatLyric from '@/utils/formatLyric';
 import { computed } from '@vue/reactivity';
 import { onMounted, ref, watch,nextTick, inject } from 'vue';
 import { useStore } from 'vuex';
+
+const store = useStore();
+const myWorker = new Worker('/worker.js');
+myWorker.postMessage('good morning!');
 const props = defineProps({
     lyric:String,
     tlyric:{
@@ -28,10 +33,11 @@ const props = defineProps({
         default:'',
     },
 });
-const store = useStore();
+const lyricRef = ref(null);
 const lyric = computed(()=>{
     return formatLyric(props.lyric);
 })
+
 const boxHeight = ref(0);
 const box = ref(null);
 let scrollY = 0;
@@ -39,13 +45,13 @@ const middle = ref(-1);
 const current = computed(()=>store.state.player.currentTime);
 const activeIndex = ref(0);
 const scrollH = ref(0);
-const lyricRef = ref(null);
 const contentRef = ref(null);
 const isOffset = ref(false);
 let flag = true;
 let spans = ref([]);
 let timer = null;
 const timePointer = ref('0.0');
+
 const findActive = (current)=>{
     let index = -1;
     for(let i = 0;i<lyric.value.length;i++){
@@ -65,6 +71,7 @@ const findMid = (height)=>{
     }
     return -1;
 }
+
 const handleScroll = (e)=>{
     scrollY = contentRef.value.scrollTop;
     middle.value = findMid(scrollY);
@@ -74,9 +81,11 @@ const handleScroll = (e)=>{
 }
 
 let setSkipTime = inject('setSkipTime');
+
 const skip = ()=>{
     setSkipTime(timePointer.value);
 }
+
 const formatTime = computed(()=>{
     let time = Math.round(timePointer.value);
     let m = 0,s = 0;
@@ -86,6 +95,7 @@ const formatTime = computed(()=>{
     if(m < 10) m = '0' + m;
     return m + ':' + s;
 })
+
 const handleWheel = (e)=>{
     flag = false;
     isOffset.value = true;
@@ -113,6 +123,7 @@ const setScroll = (newValue)=>{
 }
 
 watch(current,setScroll);
+
 watch(lyric,()=>{
     nextTick(()=>{
         spans.value = lyricRef.value.querySelectorAll('li');

@@ -129,7 +129,7 @@ const monitor = (e)=>{
         getNewData();
     }
 }
-window.addEventListener('scroll',monitor,true)
+window.addEventListener('scroll',monitor,true);
 watch(() => route.params.artistId, val => {
     arAlbums.value = [];
     offset = 0;
@@ -164,7 +164,7 @@ onUnmounted(()=>{
             flex: 1;
             flex-direction: column;
             justify-content: left;
-            align-items: start;
+            align-items: flex-start;
             margin-left: 20px;
             overflow: hidden;
             #arName{

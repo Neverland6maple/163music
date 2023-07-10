@@ -1,5 +1,5 @@
 <template>
-    <div id="playlist">
+    <div id="playlist" ref="playlistRef">
         <div id="playlistHead">
             <div id="playlistCover">
                 <img :src="`${playlist.coverImgUrl}?param=185y185`" alt="picUrl" id="playlistPic" v-if="playlist.coverImgUrl">
@@ -92,6 +92,9 @@
             <albumComment v-else-if="activeKey === '2'" :id="playlistId" :type=2></albumComment>
             <subscribers v-else-if="activeKey === '3'" :id="playlistId">收藏者</subscribers>
         </div>
+        <div id="box" v-show="listLoading">
+
+        </div>
     </div>
 </template>
 <script setup>
@@ -100,7 +103,7 @@ import TransparemtBtn from '../unit/TransparemtBtn.vue';
 import myTable from '@/components/unit/MyTable.vue';
 import {FolderAddOutlined ,DownloadOutlined,HeartOutlined,HeartFilled,FileSearchOutlined } from '@ant-design/icons-vue'
 import Pop from '@/components/search/Pop.vue'
-import { getCurrentInstance, watch ,ref,h,computed } from 'vue';
+import { getCurrentInstance, watch ,ref,h,computed, onMounted, onUnmounted, nextTick } from 'vue';
 import timeFormat from '@/utils/timeFormat';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
@@ -112,9 +115,11 @@ import albumComment from '../album/albumComment.vue';
 import dateFormat from '@/utils/dateFormat';
 import subscribers from '@/components/playlist/Subscribers.vue';
 import debounce from '@/utils/debounce';
+import throttle from '@/utils/throttle';
 const spinning = ref(false);
 const value = ref('')
 const {proxy:{$axios,$post}} = getCurrentInstance();
+const playlistRef = ref(null);
 const props = defineProps({
   like:{
     type:Boolean,
@@ -239,12 +244,15 @@ const profile = computed(()=>store.state.user.profile);
 const playlist = ref({tags:[]});
 const playlistId = ref(null);
 const activeKey = ref('1');
+const listLoading = ref(false);
 const unsubscribeState = computed(()=>store.getters.unsubscribe); 
 const tableMenu = computed(()=>store.state.tableMenu);
 const likelist = computed(()=>store.state.user.likelist);
-
-let songList = [];
 const isCreator = computed(()=>profile.value.userId === creator.value.userId);
+let songList = [];
+let showCount = 0;
+let trackCount = 0;
+
 const getList = async (id)=>{
   spinning.value = true;
   const {data:res1} = await $axios({
@@ -254,16 +262,47 @@ const getList = async (id)=>{
   creator.value = res1.playlist.creator;
   playlist.value = res1.playlist;
 
-  const limit = res1.playlist.trackCount > 1000 ? 1000 : res1.playlist.trackCount;
-  const {data:res} = await $axios({
-    method:'get',
-    url:`/api/playlist/track/all?id=${id}&limit=${limit}&offset=0&timestamp=${Date.now()}`,
-  });
-  
   dataSource.value = [];
   songList = [];
-  songs.value = res.songs;
-  songs.value.forEach((item,index)=>{
+  songs.value = [];
+
+  trackCount = res1.playlist.trackCount;
+  let count = 0,limit = 0;
+  limit = trackCount > 500 ? 500 : trackCount;
+  const {data:res} = await $axios({
+    method:'get',
+    url:`/api/playlist/track/all?id=${id}&limit=${limit}&offset=${count}&timestamp=${Date.now()}`,
+  });
+  songs.value.push(...res.songs);
+  count += limit;
+  limit = trackCount - count > 500 ? 500 : trackCount - count;
+  if(count !== trackCount){
+    getMoreList(id,limit,count);
+  }else{
+    setSongList(songs.value);
+  }
+  
+  renderList(songs.value.splice(0,500))
+  spinning.value = false;
+}
+const getMoreList = (id,limit,count)=>{
+  $axios({
+    method:'get',
+    url:`/api/playlist/track/all?id=${id}&limit=${limit}&offset=${count}&timestamp=${Date.now()}`,
+  }).then((res)=>{
+    songs.value.push(...res.data.songs);
+    count += limit;
+    limit = trackCount - count > 500 ? 500 : trackCount - count;
+
+    if(count !== trackCount){
+      getMoreList(id,limit,count);
+    }else{
+      setSongList(songs.value);
+    }
+  })
+}
+const renderList = (songs)=>{
+  songs.forEach((item,index)=>{
     const content = []
     item.ar.forEach((el,index)=>{
       if(index > 0){
@@ -274,15 +313,8 @@ const getList = async (id)=>{
     const liked = likelist.value.has(item.id);
     dataSource.value.push({
       key: item.id,
-      index,
-      number:index+1,
-      // like:'1',
-      // download:'1',
-      // song: '1',
-      // singer: '1',
-      // album: '1',
-      // dt:'1',
-
+      index:showCount++,
+      number:showCount,
       like:liked ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>,
       download:<DownloadOutlined class={'downloadIcon'}/>,
       song: <div class="song">{item.name}<vipIcon style={item.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={item.mv} style={item.mv != 0 ? '' : 'display:none'} /><noCopyright style={item.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
@@ -291,6 +323,10 @@ const getList = async (id)=>{
       dt:<div class='dt' dt={item.dt} >{timeFormat(item.dt)}</div>,
       liked,
     })
+  })
+}
+const setSongList = (songs)=>{
+  songs.forEach((item,index)=>{
     songList.push({
       id:item.id,
       name:item.name,
@@ -301,7 +337,6 @@ const getList = async (id)=>{
       mv:item.mv,
     })
   })
-  spinning.value = false;
 }
 const handlePlaySong = (id,index)=>{
   store.commit('player/setSongList',songList);
@@ -395,7 +430,6 @@ const filterDataDB = debounce(filterData,200);
 const highlight = (data,key)=>{
   const arr = data.toLowerCase().split(key.toLowerCase());
   const content = [];
-  console.log(arr);
   let index1 = 0,index2 = 0;
 
   for(let i = 0;i<arr.length;i++){
@@ -431,7 +465,6 @@ const revoke = ()=>{
     });
     e.singer = <div class={'singer'}>{content}</div>
   })
-  // dataSource.value = dataSourceOrig;
 }
 const unHighlight = (data)=>{
   if(data.type.description === 'Fragment'){
@@ -464,12 +497,12 @@ watch(()=>route.params.playlistId,(newValue)=>{
   }else{
     playlistId.value = newValue;
     value.value = '';
+    showCount = 0;
     getList(playlistId.value);
   }
 },{
   immediate:true
 })
-
 watch(likelist,async (newVal,oldVal)=>{
   const uset = new Set(newVal);
   if(props.like){
@@ -534,6 +567,27 @@ watch(unsubscribeState,val=>{
     }
   }
 })
+const getNewList = throttle(()=>{
+  if(songs.value.length > 0){
+    listLoading.value = true;
+    renderList(songs.value.splice(0,500));
+  }
+},1000)
+const monitor = (e)=>{
+  if(value.value.length === 0){
+    if(playlistRef.value.offsetHeight-e.target.scrollTop-e.target.offsetHeight < 10){
+      getNewList();
+    }
+  }
+}
+onMounted(()=>{
+  window.addEventListener('scroll',monitor,true);
+  // setSongList(songs.value);
+})
+onUnmounted(()=>{
+  window.removeEventListener('scroll',monitor,true)
+})
+
 </script>
 <style lang="less" scoped>
 @import '@/assets/theme.less';
@@ -558,7 +612,7 @@ watch(unsubscribeState,val=>{
             flex: 1;
             flex-direction: column;
             justify-content: left;
-            align-items: start;
+            align-items: flex-start;
             margin-left: 40px;
             overflow: hidden;
             #playlistName{
@@ -731,6 +785,10 @@ watch(unsubscribeState,val=>{
             }
         }
     }
-    
+    #box{
+      background-color: yellow;
+      width: 100%;
+      height: 100px;
+    }
 }
 </style>

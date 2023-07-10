@@ -66,6 +66,7 @@ const unsubscribe = async ()=>{
     store.commit('changeSliderMenu',{
         show:false
     })
+    console.log(123);
     store.commit('changeComfirmShow',{show:true,text:'确定删除该歌单？'});
 }
 watch(unsubscribeState,async (val)=>{

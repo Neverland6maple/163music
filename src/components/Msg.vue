@@ -86,7 +86,7 @@
     </div>
 </template>
 <script setup>
-import { ref , reactive, getCurrentInstance, nextTick, onMounted} from 'vue';
+import { ref , reactive, getCurrentInstance, nextTick, onUnmounted} from 'vue';
 import timeFormat from '@/utils/timeFormat'
 import TransparemtBtn from './unit/TransparemtBtn.vue';
 import {LeftOutlined,} from '@ant-design/icons-vue';
@@ -187,6 +187,9 @@ const getNewmsg = (id)=>{
 }
 getMsg();
 window.addEventListener('click',close,true);
+onUnmounted(()=>{
+    window.removeEventListener('click',close,true)
+})
 </script>
 <style scoped lang='less'>
 @import '@/assets/theme.less';

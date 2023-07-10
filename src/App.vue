@@ -43,21 +43,24 @@
 import mySlider from '@/components/Slider.vue'
 import myHeader from '@/components/Header.vue'
 import myFooter from '@/components/Footer.vue'
-import {getCurrentInstance, provide, ref} from 'vue'
+import {getCurrentInstance, provide, ref, defineAsyncComponent} from 'vue'
 import {useStore} from 'vuex'
 import { computed } from '@vue/reactivity'
 import PlayerPage from './components/PlayerPage.vue'
 import SongList from '@/components/songList/SongList.vue'
 import Login from '@/components/Login.vue'
 import Msg from './components/Msg.vue'
-import TableMenu from './components/unit/TableMenu.vue'
-import SliderMenu from './components/unit/SliderMenu.vue'
 import { VerticalAlignTopOutlined} from '@ant-design/icons-vue'
-import confirm from './components/unit/confirm.vue'
-import PlaylistBox from './components/unit/PlaylistBox.vue'
-import CreatePlaylist from './components/unit/CreatePlaylist.vue'
+
+const TableMenu = defineAsyncComponent(()=>import(/* webpackChunkName:"TableMenu" */'./components/unit/TableMenu.vue'));
+const confirm = defineAsyncComponent(()=>import(/*  webpackChunkName:"confirm" */'./components/unit/confirm.vue'));
+const CreatePlaylist = defineAsyncComponent(()=>import(/*  webpackChunkName:"CreatePlaylist" */'./components/unit/CreatePlaylist.vue'));
+const PlaylistBox = defineAsyncComponent(()=>import(/*  webpackChunkName:"PlaylistBox" */'./components/unit/PlaylistBox.vue'));
+const SliderMenu = defineAsyncComponent(()=>import(/*  webpackChunkName:"SliderMenu" */'./components/unit/SliderMenu.vue'));
 export default {
-  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList , Login , VerticalAlignTopOutlined ,Msg,TableMenu,confirm,PlaylistBox,CreatePlaylist,SliderMenu },
+  components:{ mySlider, myHeader, myFooter, PlayerPage , SongList , Login , VerticalAlignTopOutlined ,Msg,TableMenu,confirm,PlaylistBox,
+    CreatePlaylist:CreatePlaylist,
+    SliderMenu },
   setup(){
     const store = useStore();
     const slider = computed(()=>store.state.slider);

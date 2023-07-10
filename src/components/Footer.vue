@@ -17,7 +17,7 @@
           </div>
           <div class="songInfo">
             <div class="songName">
-              <div class="name">{{ songInfo.name }}</div>
+              <div class="name">{{ songInfo.name }}{{ isSpreading }}</div>
               <div class="privilege"><vipIcon :style="{'display':songInfo.fee === 1 ? '' : 'none'}" /></div>
               <div class="like" @click="likeSong"><HeartOutlined v-if="!liked" /><HeartFilled style="color:#ec4141" class="likeIcon liked" v-else/></div>
             </div>
@@ -162,6 +162,7 @@ export default defineComponent({
     })
     const liked = computed(()=>likelist.value.has(songInfo.value.id))
     const getSongList = ()=>{
+      console.log(store.state.slider);
       store.commit('changeSlider',store.state.slider == 1 ? 0 : 1);
     }
     const play = ()=>{

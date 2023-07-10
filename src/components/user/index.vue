@@ -165,7 +165,7 @@ watch(() => route.params.userId, val => {
             flex: 1;
             flex-direction: column;
             justify-content: left;
-            align-items: start;
+            align-items: flex-start;
             margin-left: 20px;
             overflow: hidden;
             #userName{

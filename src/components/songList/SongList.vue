@@ -61,29 +61,15 @@ const songListRef = ref(null);
 const dataSource = ref([]);
 const store = useStore();
 const songList = computed(()=>store.state.player.songList);
+console.log(songList.value);
 const playingIndex = computed(()=>store.state.player.playingIndex)
-dataSource.value = songList.value.map((e,index)=>{
-    const content = []
-    e.singer.forEach((el,index)=>{
-      if(index > 0){
-        content.push(<span class="slash">/</span>);
-      }
-      content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
-    });
-    return {
-        id:e.id,
-        index,
-        song:<div class="song">{e.name}<vipIcon style={e.fee === 1 ? '' : 'display:none'} /><mvIcon style={e.mv != 0 ? '' : 'display:none'} data-id={e.mv} /><noCopyright style={e.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
-        singer:<div class="singer">{content}</div>,
-        share:<div class={'share'}><LinkOutlined /></div>,
-        dt:<div class='dt'>{e.dt}</div>,
-    }
-}); 
+
 
 const setScroll = (index)=>{
     songListContentRef.value.scrollTo(0,32.425*(index-6))
 }
 const close = e=>{
+    console.log('diaoyongle');
     if(isFirst){
         isFirst = false;
     }else{
@@ -93,6 +79,26 @@ const close = e=>{
     }
 }
 onMounted(()=>{
+    Promise.resolve().then(()=>{
+        dataSource.value = songList.value.map((e,index)=>{
+            const content = []
+            e.singer.forEach((el,index)=>{
+            if(index > 0){
+                content.push(<span class="slash">/</span>);
+            }
+            content.push(<router-link to={'/artist/'+el.id} class='singerName' singerId={el.id}>{el.name}</router-link>);
+            });
+            return {
+                id:e.id,
+                index,
+                song:<div class="song">{e.name}<vipIcon style={e.fee === 1 ? '' : 'display:none'} /><mvIcon style={e.mv != 0 ? '' : 'display:none'} data-id={e.mv} /><noCopyright style={e.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>,
+                singer:<div class="singer">{content}</div>,
+                share:<div class={'share'}><LinkOutlined /></div>,
+                dt:<div class='dt'>{e.dt}</div>,
+            }
+        }); 
+    })
+
     window.addEventListener('click',close);
     setScroll(playingIndex.value);
 })

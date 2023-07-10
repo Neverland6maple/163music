@@ -7,7 +7,7 @@
                 <div class="commentList">
                     <div class="commentItem" v-for="(item) in partHotComments" :key="item.commentId">
                         <div class="userPic">
-                            <img :src="item.user.avatarUrl" alt="" class="picImg" @click="toUser(item.user.userId)">
+                            <img v-lazy="item.user.avatarUrl" alt="" class="picImg" @click="toUser(item.user.userId)">
                         </div>
                         <div class="commentBody">
                             <div class="comment">
@@ -122,9 +122,6 @@ defineExpose({
         padding-bottom: 15px;
         text-align: left;
         border-bottom: solid 1px #363636;
-        // &:first-child{
-        //     border-top: 0;
-        // }
         .userPic{
             width: 34px;
             height: 34px;
