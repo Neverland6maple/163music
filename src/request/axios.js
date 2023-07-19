@@ -4,7 +4,6 @@
 import axios from 'axios';
 import QS from 'qs';
 import router from '@/router/index.js'
-import {useRoute} from 'vue-router'
 //qs.stringify()是将对象 序列化成URL的形式，以&进行拼接
 //  let protocol = window.location.protocol; //协议
 //  let host = window.location.host; //主机

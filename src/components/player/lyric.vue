@@ -22,8 +22,6 @@ import { onMounted, ref, watch,nextTick, inject } from 'vue';
 import { useStore } from 'vuex';
 
 const store = useStore();
-const myWorker = new Worker('/worker.js');
-myWorker.postMessage('good morning!');
 const props = defineProps({
     lyric:String,
     tlyric:{

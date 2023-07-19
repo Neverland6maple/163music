@@ -4,6 +4,7 @@ export default {
         profile:JSON.parse(localStorage.getItem('profile')) || {},
         likelist:new Set(JSON.parse(localStorage.getItem('likelist'))) || new Set(),
         playlist:[],
+        playlistCache:[],
     },
     getters:{
         islogin(){
@@ -29,6 +30,9 @@ export default {
         },
         setPlaylist(state,value){
             state.playlist = value;
+        },
+        setPlaylistCache(state,value){
+            state.playlistCache = value;
         }
     },
     actions:{

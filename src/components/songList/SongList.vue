@@ -61,7 +61,6 @@ const songListRef = ref(null);
 const dataSource = ref([]);
 const store = useStore();
 const songList = computed(()=>store.state.player.songList);
-console.log(songList.value);
 const playingIndex = computed(()=>store.state.player.playingIndex)
 
 

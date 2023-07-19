@@ -81,7 +81,7 @@ import videozhCN from "video.js/dist/lang/zh-CN.json";
 import {PauseCircleOutlined ,FullscreenOutlined, FullscreenExitOutlined, DesktopOutlined , PlayCircleOutlined , FilterOutlined , AudioMutedOutlined ,DownloadOutlined,LikeOutlined,FolderAddOutlined,LinkOutlined,CommentOutlined} from '@ant-design/icons-vue';
 //样式文件注意要加上
 import "video.js/dist/video-js.css"; 
-import {ref,onMounted,watch, onBeforeUnmount, nextTick} from 'vue';
+import {ref,onMounted,watch, onBeforeUnmount} from 'vue';
 import timeFormat from "@/utils/timeFormat";
 import debounce from "@/utils/debounce.js"
 import { computed } from "@vue/reactivity";
@@ -306,9 +306,6 @@ watch(()=>props.src,val=>{
         },0)
     }
     
-})
-onMounted(()=>{
-  
 })
 onBeforeUnmount(()=>{
     if (player.value) {

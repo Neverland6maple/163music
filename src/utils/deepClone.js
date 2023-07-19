@@ -9,7 +9,9 @@ const fn = (obj)=>{
         }else{
             const res = {};
             for(let k in obj){
-                res[k] = fn(obj[k])
+                if(Object.prototype.hasOwnProperty.call(obj,k)){
+                    res[k] = fn(obj[k])
+                }
             }
             return res;
         }
@@ -17,5 +19,4 @@ const fn = (obj)=>{
         return obj;
     }
 }
-// console.log(fn([1,2,[3,[4,5,{a:[1,[,3,4]],b:'a',c:{a:2}}]]]));
 export default fn;

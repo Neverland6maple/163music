@@ -92,9 +92,6 @@
             <albumComment v-else-if="activeKey === '2'" :id="playlistId" :type=2></albumComment>
             <subscribers v-else-if="activeKey === '3'" :id="playlistId">收藏者</subscribers>
         </div>
-        <div id="box" v-show="listLoading">
-
-        </div>
     </div>
 </template>
 <script setup>
@@ -116,6 +113,7 @@ import dateFormat from '@/utils/dateFormat';
 import subscribers from '@/components/playlist/Subscribers.vue';
 import debounce from '@/utils/debounce';
 import throttle from '@/utils/throttle';
+import deepClone from '@/utils/deepClone.js'
 const spinning = ref(false);
 const value = ref('')
 const {proxy:{$axios,$post}} = getCurrentInstance();
@@ -244,7 +242,6 @@ const profile = computed(()=>store.state.user.profile);
 const playlist = ref({tags:[]});
 const playlistId = ref(null);
 const activeKey = ref('1');
-const listLoading = ref(false);
 const unsubscribeState = computed(()=>store.getters.unsubscribe); 
 const tableMenu = computed(()=>store.state.tableMenu);
 const likelist = computed(()=>store.state.user.likelist);
@@ -269,6 +266,7 @@ const getList = async (id)=>{
   trackCount = res1.playlist.trackCount;
   let count = 0,limit = 0;
   limit = trackCount > 500 ? 500 : trackCount;
+
   const {data:res} = await $axios({
     method:'get',
     url:`/api/playlist/track/all?id=${id}&limit=${limit}&offset=${count}&timestamp=${Date.now()}`,
@@ -281,8 +279,7 @@ const getList = async (id)=>{
   }else{
     setSongList(songs.value);
   }
-  
-  renderList(songs.value.splice(0,500))
+  renderList(songs.value.slice(dataSource.value.length,dataSource.value.length+500))
   spinning.value = false;
 }
 const getMoreList = (id,limit,count)=>{
@@ -364,6 +361,7 @@ const subscribe = async ()=>{
 }
 const filterData = ()=>{
   revoke();
+  if(value.value.length === 0) return;
   dataSource.value = dataSource.value.filter(e=>{
     // 发现revoke之后text节点全都变成了字符串，故重写此方法
     // const resSong = e.song.children[0].children.includes(value.value);
@@ -395,17 +393,16 @@ const filterData = ()=>{
     //   e.album = <div class={'album'} playlistId={e.album.props.playlistId}>{highlight(e.album.children[0].el.data,value.value)}</div>;
     // }
     // return resSong || resSinger || resAlbum;
-
+    
     const resSong = e.song.children[0].toLowerCase().includes(value.value.toLowerCase());
-    const resAlbum = e.album.children[0].toLowerCase().includes(value.value.toLowerCase());
+    const resAlbum = e.album.children[0] && e.album.children[0].toLowerCase().includes(value.value.toLowerCase());
     let resSinger = false; 
     for(let i = 0;i<e.singer.children[0].length;i+=2){
-      if(e.singer.children[0][i].children[0].toLowerCase().includes(value.value.toLowerCase())){
+      if(e.singer.children[0][i].children[0] && e.singer.children[0][i].children[0].toLowerCase().includes(value.value.toLowerCase())){
         resSinger = true;
         break;
       }
     }
-
     if(resSong){
       e.song = <div class={'song'}>{highlight(e.song.children[0],value.value)}{...e.song.children.slice(1)}</div>;
     }
@@ -452,19 +449,24 @@ const highlight = (data,key)=>{
   return content
 }
 const revoke = ()=>{
-  dataSource.value.forEach(e=>{
-    e.song = <div class={'song'}>{unHighlight(e.song.children[0])}{...e.song.children.slice(1)}</div>
-    e.album = <div class={'album'}>{unHighlight(e.album.children[0])}</div>
-    const content = [];
-    e.singer.children[0].children.forEach((el,index)=>{
-      if(index % 2 === 1){
-        content.push(el);
-      }else{
-        content.push(<router-link to={el.props.to} class='singerName' singerId={el.props.singerId}>{(unHighlight(el.children[0]))}</router-link>);
-      }
-    });
-    e.singer = <div class={'singer'}>{content}</div>
-  })
+  dataSource.value = [];
+  const temp =showCount;
+  showCount = 0;
+  renderList(songs.value.slice(0,temp))
+  // dataSource.value.forEach(e=>{
+  //   e.song = <div class={'song'}>{unHighlight(e.song.children[0])}{...e.song.children.slice(1)}</div>
+  //   e.album = <div class={'album'}>{unHighlight(e.album.children[0])}</div>
+  //   const content = [];
+  //   e.singer.children[0].children.forEach((el,index)=>{
+  //     if(index % 2 === 1){
+  //       content.push(el);
+  //     }else{
+  //       content.push(<router-link to={el.props.to} class='singerName' singerId={el.props.singerId}>{(unHighlight(el.children[0]))}</router-link>);
+  //     }
+  //   });
+  //   e.singer = <div class={'singer'}>{content}</div>
+  // })
+
 }
 const unHighlight = (data)=>{
   if(data.type.description === 'Fragment'){
@@ -567,16 +569,16 @@ watch(unsubscribeState,val=>{
     }
   }
 })
-const getNewList = throttle(()=>{
-  if(songs.value.length > 0){
-    listLoading.value = true;
-    renderList(songs.value.splice(0,500));
+const getNewList = throttle((start,songs)=>{
+  if(start < songs.value.length){
+    renderList(songs.value.slice(start,start+500));
   }
 },1000)
+
 const monitor = (e)=>{
   if(value.value.length === 0){
     if(playlistRef.value.offsetHeight-e.target.scrollTop-e.target.offsetHeight < 10){
-      getNewList();
+      getNewList(dataSource.value.length,songs);
     }
   }
 }
@@ -784,11 +786,6 @@ onUnmounted(()=>{
               }
             }
         }
-    }
-    #box{
-      background-color: yellow;
-      width: 100%;
-      height: 100px;
     }
 }
 </style>

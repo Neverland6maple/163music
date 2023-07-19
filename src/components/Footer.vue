@@ -162,7 +162,6 @@ export default defineComponent({
     })
     const liked = computed(()=>likelist.value.has(songInfo.value.id))
     const getSongList = ()=>{
-      console.log(store.state.slider);
       store.commit('changeSlider',store.state.slider == 1 ? 0 : 1);
     }
     const play = ()=>{

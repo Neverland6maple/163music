@@ -45,7 +45,6 @@ export default createStore({
       state.isSpreading = value;
     },
     changeSlider(state,value){
-      console.log(value);
       state.slider = value;
     },
     changeLoginShow(state,value){
