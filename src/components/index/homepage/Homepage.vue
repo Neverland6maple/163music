@@ -3,8 +3,6 @@
         <div class="main">
             <Carousel :images="images"></Carousel>
         </div>
-        <img src="@/assets/test150.png" alt="">
-        <img :src="test400" alt="">
     </div>
 </template>
 <script setup>

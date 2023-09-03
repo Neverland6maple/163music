@@ -25,11 +25,12 @@
 </template>
 <script setup>
 import {FolderAddOutlined,LinkOutlined} from '@ant-design/icons-vue'
-import { getCurrentInstance, watch, reactive,ref,h, computed, onMounted, onUnmounted } from 'vue';
+import { getCurrentInstance, watch, reactive,ref,h, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import mvIcon from '@/components/icon/mv.vue'
 import vipIcon from '@/components/icon/vip.vue'
 import noCopyright from '../icon/noCopyright.vue';
+import { useEventListener } from '@/composables/event';
 const {proxy:{$axios}} = getCurrentInstance();
 const columns = [
   {
@@ -63,12 +64,10 @@ const store = useStore();
 const songList = computed(()=>store.state.player.songList);
 const playingIndex = computed(()=>store.state.player.playingIndex)
 
-
 const setScroll = (index)=>{
     songListContentRef.value.scrollTo(0,32.425*(index-6))
 }
 const close = e=>{
-    console.log('diaoyongle');
     if(isFirst){
         isFirst = false;
     }else{
@@ -77,6 +76,22 @@ const close = e=>{
         }
     }
 }
+const customRow = (record) => {
+  return {
+    onDblclick: (event) => {
+      handlePlaySong(record.id,record.index);
+    },
+  };
+}
+const handlePlaySong = (id,index)=>{
+  store.commit('player/changePlayingIndex',index);
+  store.dispatch('player/changeSong',id);
+}
+
+useEventListener(window,'click',close);
+watch(playingIndex,()=>{
+    setScroll(playingIndex.value);
+})
 onMounted(()=>{
     Promise.resolve().then(()=>{
         dataSource.value = songList.value.map((e,index)=>{
@@ -98,25 +113,7 @@ onMounted(()=>{
         }); 
     })
 
-    window.addEventListener('click',close);
     setScroll(playingIndex.value);
-})
-const customRow = (record) => {
-  return {
-    onDblclick: (event) => {
-      handlePlaySong(record.id,record.index);
-    },
-  };
-}
-const handlePlaySong = (id,index)=>{
-  store.commit('player/changePlayingIndex',index);
-  store.dispatch('player/changeSong',id);
-}
-watch(playingIndex,()=>{
-    setScroll(playingIndex.value);
-})
-onUnmounted(()=>{
-    window.removeEventListener('click',close);
 })
 </script>
 <style lang="less" scoped>
