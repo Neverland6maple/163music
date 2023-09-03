@@ -1,5 +1,5 @@
 # 163music
-
+后端api接口使用github上提供的https://github.com/Binaryify/NeteaseCloudMusicApi
 ## Project setup
 ```
 npm install
