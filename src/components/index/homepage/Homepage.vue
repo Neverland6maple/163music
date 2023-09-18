@@ -3,10 +3,13 @@
         <div class="main">
             <Carousel :images="images"></Carousel>
         </div>
+        <div>
+            {{ arr }}
+        </div>
     </div>
 </template>
 <script setup>
-import { getCurrentInstance , ref,computed, reactive, watch} from 'vue';
+import { getCurrentInstance , ref,computed, shallowRef} from 'vue';
 import Carousel from '@/components/index/homepage/Carousel.vue'
 import { useStore } from 'vuex';
 const {proxy:{$axios}} = getCurrentInstance();
@@ -16,7 +19,6 @@ const islogin = computed(()=>store.getters['user/islogin']);
 const profile = computed(()=>store.state.user.profile);
 const blocks = ref([]);
 const banners = ref([]);
-const test400 = ref(require('@/assets/test400.png'))
 const getBlocks = async ()=>{
     const {data:res} = await $axios({
         method:'get',
@@ -36,7 +38,6 @@ const getBlocks = async ()=>{
         targetId:item.targetId})
     });
 }
-getBlocks();
 </script>
 <style lang="less" scoped>
 #homepage{

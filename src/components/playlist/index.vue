@@ -289,49 +289,7 @@ const isCreator = computed(()=>profile.value.userId === creator.value.userId);
 let songList = [];
 let showCount = 0;
 let trackCount = 0;
-
-// const temp = shallowRef([
-//     {
-//         title: "Learn TypeScript",
-//         done: true,
-//         obj:{
-//           a:1
-//         },
-//     },
-//     {
-//         title: "Try Immer",
-//         done: false,
-//         obj:{
-//           a:2
-//         },
-//     }
-// ])
-// let baseState = temp.value;
 let baseState = [];
-// const baseState = [
-//     {
-//         title: "Learn TypeScript",
-//         done: true,
-//         obj:{
-//           a:1
-//         }
-//     },
-//     {
-//         title: "Try Immer",
-//         done: false,
-//         obj:{
-//           a:2
-//         }
-//     }
-// ]
-
-// const nextState = produce(baseState, draftState => {
-//     draftState.push({title: "Tweet about it"})
-//     draftState[1].done = true
-// })
-// console.log(temp.value);
-// temp.value = nextState;
-// console.log(temp.value);
 
 
 const getList = async (id)=>{
@@ -366,6 +324,7 @@ const getList = async (id)=>{
   renderList(songs.value.slice(dataSource.value.length,dataSource.value.length+500))
   spinning.value = false;
 }
+
 const getMoreList = (id,limit,count)=>{
   $axios({
     method:'get',
@@ -383,9 +342,10 @@ const getMoreList = (id,limit,count)=>{
   })
 }
 const renderList = (songs)=>{
+  const arr = [];
   songs.forEach((item,index)=>{
     const liked = likelist.value.has(item.id);
-    dataSource.value.push({
+    arr.push({
       key: item.id,
       index:showCount++,
       number:showCount,
@@ -397,6 +357,7 @@ const renderList = (songs)=>{
       liked,
     })
   })
+  dataSource.value = dataSource.value.concat(arr);
   baseState = dataSource.value;
 }
 const setSongList = (songs)=>{
@@ -466,7 +427,7 @@ const filterData = ()=>{
       }
     }
   })
-  dataSource.value = state.value;
+  // dataSource.value = state.value;
 
 
   // const nextState = produce(baseState,draftState=>{
@@ -528,6 +489,7 @@ const filterData = ()=>{
   
 }
 const filterDataDB = debounce(filterData,200);
+
 const highlight = (data,key)=>{
   const arr = data.toLowerCase().split(key.toLowerCase());
   const content = [];
