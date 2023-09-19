@@ -81,7 +81,11 @@ const columns = [
   {
     title: '时长',
     dataIndex: 'dt',
-    width:'8%'
+    width:'8%',
+    customRender:({text, record, index, column})=>{
+      console.log(index);
+      return text;
+    }
   },
   {
     title: '热度',

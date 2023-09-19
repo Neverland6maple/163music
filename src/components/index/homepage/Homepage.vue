@@ -3,9 +3,6 @@
         <div class="main">
             <Carousel :images="images"></Carousel>
         </div>
-        <div>
-            {{ arr }}
-        </div>
     </div>
 </template>
 <script setup>
@@ -38,6 +35,7 @@ const getBlocks = async ()=>{
         targetId:item.targetId})
     });
 }
+getBlocks();
 </script>
 <style lang="less" scoped>
 #homepage{

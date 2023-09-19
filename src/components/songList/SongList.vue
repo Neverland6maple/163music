@@ -45,6 +45,10 @@ const columns = [
         }
       }
     },
+    customRender:({text, record, index, column})=>{
+        console.log(index);
+        return text
+    }
   },
   {
     dataIndex: 'singer',

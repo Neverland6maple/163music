@@ -1,6 +1,5 @@
 <template>
     <div id="myTable" @contextmenu="stopDefault">
-        <a-spin :indicator="indicator" tip="加载中"  :spinning="props.spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
         <a-table
         class="albumTable"
         size="small"
@@ -10,21 +9,18 @@
         :pagination=pagination
         :rowClassName="(record, index) => (index % 2 === 0 ? 'table-striped' : null)"
         :customRow=customRow
-        v-if="!props.spinning"
         @change="handleTableChange"
         />
     </div>
 </template>
 <script setup>
 import { $axios } from '@/request/axios';
-import { LoadingOutlined, } from '@ant-design/icons-vue'
-import { h, onMounted } from 'vue';
+import { h, onMounted,ref } from 'vue';
 import { useStore } from 'vuex';
 import timeFormat from '@/utils/timeFormat';
 const props = defineProps({
     columns:Array,
     dataSource:Array,
-    spinning:Boolean,
     pagination:[Object,Boolean],
     showHeader:{
       type:Boolean,
@@ -41,13 +37,6 @@ const props = defineProps({
 });
 const emit = defineEmits(['handlePlaySong','handleTableChange'])
 const store = useStore();
-const indicator = h(LoadingOutlined, {
-  style: {
-    fontSize: '20px',
-    marginRight:'16px',
-  },
-  spin: true,
-});
 const customRow = (record) => {
   return {
     onDblclick: (event) => {

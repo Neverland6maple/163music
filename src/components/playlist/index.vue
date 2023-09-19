@@ -89,9 +89,16 @@
                   </div>
                 </div>
             </div>
-            <myTable :user="isCreator" :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong" :spinning="spinning" v-if="activeKey === '1'" :pagination=false></myTable>
-            <albumComment v-else-if="activeKey === '2'" :id="playlistId" :type=2></albumComment>
-            <subscribers v-else-if="activeKey === '3'" :id="playlistId">收藏者</subscribers>
+            <div v-if="activeKey === '1'">
+              <a-spin :indicator="indicator" tip="加载中"  :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
+              <myTable  :user="isCreator" :loading="spinning" :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong"  :pagination=false v-if="!spinning"></myTable>
+            </div>
+            <div v-else-if="activeKey === '2'">
+              <albumComment  :id="playlistId" :type=2></albumComment>
+            </div>
+            <div v-else-if="activeKey === '3'">
+              <subscribers  :id="playlistId">收藏者</subscribers>
+            </div>
         </div>
     </div>
 </template>
@@ -99,7 +106,7 @@
 import PlayAll from '../unit/PlayAll.vue';
 import TransparemtBtn from '../unit/TransparemtBtn.vue';
 import myTable from '@/components/unit/MyTable.vue';
-import {FolderAddOutlined ,DownloadOutlined,HeartOutlined,HeartFilled,FileSearchOutlined } from '@ant-design/icons-vue'
+import {FolderAddOutlined ,DownloadOutlined,HeartOutlined,HeartFilled,FileSearchOutlined,LoadingOutlined } from '@ant-design/icons-vue'
 import { getCurrentInstance, watch ,ref,h,computed, onMounted, onUnmounted, nextTick, shallowRef, unref  } from 'vue';
 import timeFormat from '@/utils/timeFormat';
 import { useStore } from 'vuex';
@@ -113,10 +120,9 @@ import dateFormat from '@/utils/dateFormat';
 import subscribers from '@/components/playlist/Subscribers.vue';
 import debounce from '@/utils/debounce';
 import throttle from '@/utils/throttle';
-import {produce} from "immer";
 import { useEventListener } from '@/composables/event';
 import { useHistory } from '@/composables/history';
-const spinning = ref(false);
+const spinning = ref(true);
 const value = ref('')
 const {proxy:{$axios,$post}} = getCurrentInstance();
 const playlistRef = ref(null);
@@ -130,6 +136,10 @@ const columns = [
   {
     dataIndex: 'number',
     width:'50px',
+    customRender:({text, record, index, column})=>{
+      console.log(index);
+      return text;
+    }
   },
   {
     dataIndex: 'like',
@@ -150,7 +160,7 @@ const columns = [
       }
     },
     customRender:({text, record, index, column})=>{
-      return text ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'}/> : <HeartOutlined class={'likeIcon'}/>
+      return text ? <HeartFilled style={'color:#ec4141'} class={'likeIcon liked'} /> : <HeartOutlined class={'likeIcon'}/>
     }
   },
   {
@@ -171,7 +181,7 @@ const columns = [
       }
     },
     customRender:({text, record, index, column})=>{
-      return <DownloadOutlined class={'downloadIcon'}/>
+      return <DownloadOutlined class={'downloadIcon'} />
     }
   },
   {
@@ -192,10 +202,10 @@ const columns = [
       return a.song.name < b.song.name
     },
     customRender:({text, record, index, column})=>{
-      if(!text.highlight){
+      if(!filterKey.value){
         return <div class="song">{text.name}<vipIcon style={text.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={text.mv} style={text.mv != 0 ? '' : 'display:none'} /><noCopyright style={text.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>
       }else{
-        return <div class="song">{highlight(text.name,text.highlight)}<vipIcon style={text.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={text.mv} style={text.mv != 0 ? '' : 'display:none'} /><noCopyright style={text.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>
+        return <div class="song">{highlight(text.name,filterKey.value)}<vipIcon style={text.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={text.mv} style={text.mv != 0 ? '' : 'display:none'} /><noCopyright style={text.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>
       }
     }
   },
@@ -219,7 +229,6 @@ const columns = [
     },
     customRender:({text, record, index, column})=>{
       const content = [];
-      // if(!text.highlight){
       text.forEach((el,index)=>{
         if(index > 0){
           content.push(<span class="slash">/</span>);
@@ -268,29 +277,37 @@ const columns = [
       return b.dt - a.dt;
     },
     customRender:({text, record, index, column})=>{
-      return <div class='dt' dt={text} >{timeFormat(text)}</div>
+      return <div class='dt' dt={text}>{timeFormat(text)}</div>
     }
   },
 ];
 const creator = ref({});
-let dataSource = shallowRef([]);
+let dataSource = ref([]);
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
 const songs = shallowRef([]);
 const profile = computed(()=>store.state.user.profile);
+const dataSource1 = ref([]);
 const playlist = ref({tags:[]});
 const playlistId = ref(null);
 const activeKey = ref('1');
+const filterKey = ref('');
 const unsubscribeState = computed(()=>store.getters.unsubscribe); 
 const tableMenu = computed(()=>store.state.tableMenu);
 const likelist = computed(()=>store.state.user.likelist);
-const isCreator = computed(()=>profile.value.userId === creator.value.userId);
+const isCreator = ref(false);
 let songList = [];
 let showCount = 0;
 let trackCount = 0;
 let baseState = [];
-
+const indicator = h(LoadingOutlined, {
+  style: {
+    fontSize: '20px',
+    marginRight:'16px',
+  },
+  spin: true,
+});
 
 const getList = async (id)=>{
   spinning.value = true;
@@ -300,7 +317,7 @@ const getList = async (id)=>{
   });
   creator.value = res1.playlist.creator;
   playlist.value = res1.playlist;
-
+  
   dataSource.value = [];
   songList = [];
   songs.value = [];
@@ -313,15 +330,18 @@ const getList = async (id)=>{
     method:'get',
     url:`/api/playlist/track/all?id=${id}&limit=${limit}&offset=${count}&timestamp=${Date.now()}`,
   });
-  songs.value.push(...res.songs);
+  
+  songs.value = res.songs;
   count += limit;
   limit = trackCount - count > 500 ? 500 : trackCount - count;
+
+  renderList(songs.value.slice(dataSource.value.length,dataSource.value.length+500))
+  
   if(count !== trackCount){
     getMoreList(id,limit,count);
   }else{
     setSongList(songs.value);
   }
-  renderList(songs.value.slice(dataSource.value.length,dataSource.value.length+500))
   spinning.value = false;
 }
 
@@ -350,14 +370,22 @@ const renderList = (songs)=>{
       index:showCount++,
       number:showCount,
       like:liked,
-      song: item,
+      song: {
+        name:item.name,
+        fee:item.fee,
+        mv:item.mv,
+        noCopyrightRcmd:item.noCopyrightRcmd,
+      },
       singer: item.ar,
       album: item.al,
       dt:item.dt,
       liked,
     })
   })
-  dataSource.value = dataSource.value.concat(arr);
+  setTimeout(()=>{
+    dataSource.value = dataSource.value.concat(arr);
+    isCreator.value = profile.value.userId === creator.value.userId
+  },0)
   baseState = dataSource.value;
 }
 const setSongList = (songs)=>{
@@ -399,9 +427,11 @@ const subscribe = async ()=>{
 }
 const filterData = ()=>{
   if(value.value.length === 0) {
-    dataSource.value = baseState
+    dataSource.value = baseState;
+    filterKey.value = '';
     return;
   };
+  filterKey.value = value.value;
   const {state,update} = useHistory(baseState);
   update(draftState=>{
     for(let i = 0;i < draftState.length;i++){
@@ -415,9 +445,9 @@ const filterData = ()=>{
           e.singer[i].highlight = value.value;
         }
       }
-      if(resSong){
-        e.song.highlight = value.value;
-      }
+      // if(resSong){
+      //   e.song.highlight = value.value;
+      // }
       if(resAlbum){
         e.album.highlight = value.value;
       }
@@ -427,7 +457,7 @@ const filterData = ()=>{
       }
     }
   })
-  // dataSource.value = state.value;
+  dataSource.value = state.value;
 
 
   // const nextState = produce(baseState,draftState=>{
@@ -558,6 +588,7 @@ const getNewList = throttle((start,songs)=>{
     renderList(songs.value.slice(start,start+500));
   }
 },1000)
+
 const monitor = (e)=>{
   if(value.value.length === 0){
     if(playlistRef.value.offsetHeight-e.target.scrollTop-e.target.offsetHeight < 10){
@@ -642,7 +673,6 @@ watch(unsubscribeState,val=>{
     }
   }
 })
-
 
 </script>
 <style lang="less" scoped>
