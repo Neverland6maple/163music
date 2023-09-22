@@ -18,10 +18,6 @@ export default defineComponent({
             title: '姓名',
             dataIndex: 'name',
             key: 'name',
-            customRender:({text, record, index, column})=>{
-              console.log(index);
-              return text
-          }
           },
           {
             title: '年龄',

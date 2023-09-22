@@ -42,6 +42,7 @@ module.exports = defineConfig({
             }
           ]
         },
+        
       ]
     },
     optimization: {
@@ -64,4 +65,13 @@ module.exports = defineConfig({
       // 'vue-router': 'VueRouter',
     },
   },
+  css:{
+    loaderOptions:{
+      less:{
+        lessOptions:{
+          javascriptEnabled:true,
+        }
+      }
+    }
+  }
 })

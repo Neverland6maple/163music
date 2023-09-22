@@ -25,7 +25,6 @@
           <PlayerPage v-if="isCover === false" @showScrollToTop="showScrollToTop" ref="playerPageRef"></PlayerPage>
           <SongList v-if="slider === 1"></SongList>
           <Msg v-else-if="slider === 2"></Msg>
-          <div class="commentBox" v-if="isSpreading" @click="showCommentBox">快来说点什么吧</div>
           <div :class="{'toTop':true,'hide':!scrollToTop}" @click="scrollToTopFn" v-if="isSpreading"><VerticalAlignTopOutlined /></div>
         </a-layout>
 
@@ -92,9 +91,6 @@ export default {
     const scrollToTopFn = ()=>{
       playerPageRef.value.scrollToTop();
     }
-    const showCommentBox = ()=>{
-      playerPageRef.value.showCommentBox(true);
-    }
     getLikes(profile.value.userId);
     return {
       isSpreading,
@@ -106,7 +102,6 @@ export default {
       scrollToTop,
       scrollToTopFn,
       playerPageRef,
-      showCommentBox,
       comfirmShow,
       playlistBoxShow,
       createPlaylist,
@@ -115,25 +110,6 @@ export default {
 }
 </script>
 <style lang="less" scoped>
-.commentBox{
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  width: 135px;
-  height: 35px;
-  border-radius: 17px;
-  background-color: #3e3e3e;
-  color: #d8d8d8;
-  line-height: 35px;
-  font-size: 12px;
-  transform: translateX(-50%);
-  z-index: 999;
-  cursor: pointer;
-  transition: all .5s;
-  &:hover{
-    background-color: #505050;
-  }
-}
 .toTop{
   position: absolute;
   bottom:10px;

@@ -35,7 +35,7 @@
                     <commentList :total="total" :spinning="spinning" :hotComments="hotComments" :latestComments="latestComments" @handlePageChange="handlePageChange" ref="commentListRef"></commentList>
                 </div>
                 <div class="sideBar">
-                    123
+                    侧边栏
                 </div>
             </div>
         </div>
@@ -64,13 +64,16 @@
                 </div>
             </div>
             <div class="commentBtn" @click="comment">
-                <a-button type="primary" shape="round" :size="size" :class="{'actived':value}">
+                <a-button type="primary" shape="round" :class="{'actived':value}">
                     发布
                 </a-button>
             </div>
             <CloseOutlined class="closeIcon" @click="showCommentBox(false)"/>
         </div>
     </div>
+    <Teleport to="#app">
+        <div class="commentBox"  @click="showCommentBox(true)" v-if="isSpreading">快来说点什么吧</div>
+    </Teleport>
 </template>
 <script setup>
 import {useStore} from 'vuex'
@@ -160,11 +163,31 @@ watch(()=>songInfo.value,(val)=>{
 
 defineExpose({
     scrollToTop,
-    showCommentBox,
+    // showCommentBox, 使用teleport后注释
 })
 </script>
 <style lang="less" scoped>
 @import '@/assets/theme.less';
+.commentBox{
+  position: absolute;
+  bottom: 90px;
+  left: 50%;
+  width: 135px;
+  height: 35px;
+  border-radius: 17px;
+  background-color: #3e3e3e;
+  color: #d8d8d8;
+  line-height: 35px;
+  font-size: 12px;
+  transform: translateX(-50%);
+  z-index: 999;
+  cursor: pointer;
+  transition: all .5s;
+  padding: 0 20px;
+  &:hover{
+    background-color: #505050;
+  }
+}
 #playerPage{
   position: absolute;
   top: 0;
@@ -282,6 +305,7 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 1;
     .commentFrame{
         width: 470px;
         height: 300px;

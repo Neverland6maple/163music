@@ -9,7 +9,6 @@
                     <div class="playlistIcon">歌单</div>
                     <div class="playlistName">{{ playlist.name }}</div>
                 </div>
-                {{ state }}
                 <div id="playlistCreator">
                   <div id="creatorPic">
                     <img :src="creator.avatarUrl" alt="" class="coverPic">
@@ -84,14 +83,14 @@
                 <div class="tableSearch">
                   <input type="text" v-model="value" class="searchIpt" placeholder="搜索歌单音乐" @keydown="filterDataDB">
                   <div class="modifier">
-                    <span v-if="value.length > 0" style="cursor: pointer;" @click="{value = '';rovoke();}">×</span>
+                    <span v-if="value.length > 0" style="cursor: pointer;" @click="{value = '';filterDataDB()}">×</span>
                     <FileSearchOutlined v-else/>
                   </div>
                 </div>
             </div>
             <div v-if="activeKey === '1'">
               <a-spin :indicator="indicator" tip="加载中"  :spinning="spinning" :style="{color:'#666',display:'flex',alignItems:'center',justifyContent:'center'}"/>  
-              <myTable  :user="isCreator" :loading="spinning" :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong"  :pagination=false v-if="!spinning"></myTable>
+              <myTable :virtual="{itemSize:36,listHeight:playlistRef.offsetHeight}" :bufferRange="100"  :user="isCreator" :loading="spinning" :columns="columns" :dataSource="dataSource" @handle-play-song="handlePlaySong"  :pagination=false v-if="!spinning"></myTable>
             </div>
             <div v-else-if="activeKey === '2'">
               <albumComment  :id="playlistId" :type=2></albumComment>
@@ -136,10 +135,6 @@ const columns = [
   {
     dataIndex: 'number',
     width:'50px',
-    customRender:({text, record, index, column})=>{
-      console.log(index);
-      return text;
-    }
   },
   {
     dataIndex: 'like',
@@ -198,9 +193,9 @@ const columns = [
         }
       }
     },
-    sorter:(a,b)=>{
-      return a.song.name < b.song.name
-    },
+    // sorter:(a,b)=>{
+    //   return a.song.name < b.song.name
+    // },
     customRender:({text, record, index, column})=>{
       if(!filterKey.value){
         return <div class="song">{text.name}<vipIcon style={text.fee === 1 ? '' : 'display:none'} /><mvIcon data-id={text.mv} style={text.mv != 0 ? '' : 'display:none'} /><noCopyright style={text.noCopyrightRcmd !== null ? '' : 'display:none'} /></div>
@@ -224,9 +219,9 @@ const columns = [
         }
       }
     },
-    sorter:(a,b)=>{
-      return a.singer[0].name < b.singer[0].name
-    },
+    // sorter:(a,b)=>{
+    //   return a.singer[0].name < b.singer[0].name
+    // },
     customRender:({text, record, index, column})=>{
       const content = [];
       text.forEach((el,index)=>{
@@ -258,9 +253,9 @@ const columns = [
         }
       }
     },
-    sorter:(a,b)=>{
-      return a.album.name < b.album.name;
-    },
+    // sorter:(a,b)=>{
+    //   return a.album.name < b.album.name;
+    // },
     customRender:({text, record, index, column})=>{
       if(!text.highlight){
         return <div class="album" playlistId={text.id}>{text.name}</div>
@@ -273,22 +268,21 @@ const columns = [
     title: '时长',
     dataIndex: 'dt',
     width:'10%',
-    sorter: (a, b) => {
-      return b.dt - a.dt;
-    },
+    // sorter: (a, b) => {
+    //   return b.dt - a.dt;
+    // },
     customRender:({text, record, index, column})=>{
       return <div class='dt' dt={text}>{timeFormat(text)}</div>
     }
   },
 ];
 const creator = ref({});
-let dataSource = ref([]);
+let dataSource = shallowRef([]);
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
 const songs = shallowRef([]);
 const profile = computed(()=>store.state.user.profile);
-const dataSource1 = ref([]);
 const playlist = ref({tags:[]});
 const playlistId = ref(null);
 const activeKey = ref('1');
@@ -353,6 +347,7 @@ const getMoreList = (id,limit,count)=>{
     songs.value.push(...res.data.songs);
     count += limit;
     limit = trackCount - count > 500 ? 500 : trackCount - count;
+    renderList(res.data.songs);
 
     if(count !== trackCount){
       getMoreList(id,limit,count);
@@ -381,12 +376,13 @@ const renderList = (songs)=>{
       dt:item.dt,
       liked,
     })
+
   })
   setTimeout(()=>{
     dataSource.value = dataSource.value.concat(arr);
     isCreator.value = profile.value.userId === creator.value.userId
+    baseState = dataSource.value;
   },0)
-  baseState = dataSource.value;
 }
 const setSongList = (songs)=>{
   songs.forEach((item,index)=>{
@@ -445,9 +441,6 @@ const filterData = ()=>{
           e.singer[i].highlight = value.value;
         }
       }
-      // if(resSong){
-      //   e.song.highlight = value.value;
-      // }
       if(resAlbum){
         e.album.highlight = value.value;
       }
@@ -458,65 +451,6 @@ const filterData = ()=>{
     }
   })
   dataSource.value = state.value;
-
-
-  // const nextState = produce(baseState,draftState=>{
-  //   for(let i = 0;i < draftState.length;i++){
-  //     const e = draftState[i];
-  //     const resSong = e.song.name.toLowerCase().includes(value.value.toLowerCase());
-  //     const resAlbum = e.album.name && e.album.name.toLowerCase().includes(value.value.toLowerCase());
-  //     let resSinger = false; 
-  //     for(let i = 0;i<e.singer.length;i++){
-  //       if(e.singer[i].name && e.singer[i].name.toLowerCase().includes(value.value.toLowerCase())){
-  //         resSinger = true;
-  //         e.singer[i].highlight = value.value;
-  //       }
-  //     }
-  //     if(resSong){
-  //       e.song.highlight = value.value;
-  //     }
-  //     if(resAlbum){
-  //       e.album.highlight = value.value;
-  //     }
-  //     if(!(resSong || resSinger || resAlbum)){
-  //       draftState.splice(i,1);
-  //       i--;
-  //     }
-  //   }
-  //   // dataSource.value = dataSource.value.filter(e=>{
-  //   //   // 发现revoke之后text节点全都变成了字符串，故重写此方法
-  //   //   const resSong = e.song.name.toLowerCase().includes(value.value.toLowerCase());
-  //   //   const resAlbum = e.album.name && e.album.name.toLowerCase().includes(value.value.toLowerCase());
-  //   //   let resSinger = false; 
-  //   //   for(let i = 0;i<e.singer.length;i+=2){
-  //   //     if(e.singer[i].name && e.singer[i].name.toLowerCase().includes(value.value.toLowerCase())){
-  //   //       resSinger = true;
-  //   //       break;
-  //   //     }
-  //   //   }
-  //   //   if(resSong){
-  //   //     e.song.highlight = value.value;
-  //   //     // <div class={'song'}>{highlight(e.song.children[0],value.value)}{...e.song.children.slice(1)}</div>;
-  //   //   }
-  //   //   // if(resSinger){
-  //   //   //   const content = []
-  //   //   //   e.singer.children[0].forEach((el,index)=>{
-  //   //   //     if(index % 2 === 1){
-  //   //   //       content.push(el);
-  //   //   //     }else{
-  //   //   //       content.push(<router-link to={el.props.to} class='singerName' singerId={el.props.singerId}>{(highlight(el. children[0],value.value))}</router-link>);
-  //   //   //     }
-  //   //   //   });
-  //   //   //   e.singer = <div class={'singer'}>{content}</div>
-  //   //   // }
-  //   //   // if(resAlbum){
-  //   //   //   e.album = <div class={'album'} playlistId={e.album.props.playlistId}>{highlight(e.album.children[0],value.value)}</  div>;
-  //   //   // }
-  //   //   return resSong || resSinger || resAlbum;
-  //   // })
-  // })
-  // dataSource.value = nextState;
-  
 }
 const filterDataDB = debounce(filterData,200);
 
@@ -543,9 +477,7 @@ const highlight = (data,key)=>{
   }
   return content;
 }
-const revoke = ()=>{
-  dataSource.value = baseState
-
+// const revoke = ()=>{
   // dataSource.value = [];
   // const temp =showCount;
   // showCount = 0;
@@ -564,8 +496,7 @@ const revoke = ()=>{
   //   });
   //   e.singer = <div class={'singer'}>{content}</div>
   // })
-
-}
+// }
 const unHighlight = (data)=>{
   if(data.type.description === 'Fragment'){
     let str = '';
@@ -583,20 +514,22 @@ const unHighlight = (data)=>{
 const playAll = ()=>{
   handlePlaySong(songList[0].id,0);
 }
-const getNewList = throttle((start,songs)=>{
-  if(start < songs.value.length){
-    renderList(songs.value.slice(start,start+500));
-  }
-},1000)
 
-const monitor = (e)=>{
-  if(value.value.length === 0){
-    if(playlistRef.value.offsetHeight-e.target.scrollTop-e.target.offsetHeight < 10){
-      getNewList(dataSource.value.length,songs);
-    }
-  }
-}
-useEventListener(window,'scroll',monitor,true);
+
+//触底刷新
+// const getNewList = throttle((start,songs)=>{
+//   if(start < songs.value.length){
+//     renderList(songs.value.slice(start,start+500));
+//   }
+// },1000)
+// const monitor = (e)=>{
+//   if(value.value.length === 0){
+//     if(playlistRef.value.offsetHeight-e.target.scrollTop-e.target.offsetHeight < 10){
+//       getNewList(dataSource.value.length,songs);
+//     }
+//   }
+// }
+// useEventListener(window,'scroll',monitor,true);
 
 watch(()=>route.params.playlistId,(newValue)=>{
   if(newValue === 'undefined'){
@@ -673,12 +606,12 @@ watch(unsubscribeState,val=>{
     }
   }
 })
-
 </script>
 <style lang="less" scoped>
 @import '@/assets/theme.less';
 #playlist{
     width: 100%;
+    height: 100%;
     #playlistHead{
         width: 100%;
         box-sizing: border-box;
